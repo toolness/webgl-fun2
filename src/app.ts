@@ -1,11 +1,11 @@
-import { Points } from "./points";
+import { Points2D } from "./points-2d";
 import { GlUniformVector, GlProgram, getAttribLocation } from "./webgl";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-function makeSpaceship(): Points {
-  const leftHalf = Points.fromArray([
+function makeSpaceship(): Points2D {
+  const leftHalf = Points2D.fromArray([
     -0.5, 0,
     0, 0.75,
     0, 0.15
@@ -26,10 +26,10 @@ class SimpleGlProgram extends GlProgram {
   }
 }
 
-class PointsDrawer {
+class Points2DDrawer {
   buffer: WebGLBuffer;
 
-  constructor(readonly gl: WebGLRenderingContext, readonly points: Points) {
+  constructor(readonly gl: WebGLRenderingContext, readonly points: Points2D) {
     const buffer = gl.createBuffer();
 
     if (buffer === null) {
@@ -74,7 +74,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
-  const spaceship = new PointsDrawer(gl, makeSpaceship());
+  const spaceship = new Points2DDrawer(gl, makeSpaceship());
 
   console.log("Initialization successful!");
 
