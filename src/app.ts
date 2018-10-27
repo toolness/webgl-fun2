@@ -1,3 +1,5 @@
+import { Points } from "./points";
+
 const vertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const fragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
@@ -55,6 +57,15 @@ function getAttribLocation(gl: WebGLRenderingContext, program: WebGLProgram, nam
   return loc;
 }
 
+function makeSpaceship(): Points {
+  const leftHalf = Points.fromArray([
+    -0.5, 0,
+    0, 0.75,
+    0, 0.15
+  ]);
+  return leftHalf.concat(leftHalf.mirrorHorizontally());
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -77,12 +88,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const posBuffer = gl.createBuffer();
 
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-  const positions = [
-    0, 0,
-    0, 0.5,
-    0.7, 0
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  const spaceship = makeSpaceship();
+  gl.bufferData(gl.ARRAY_BUFFER, spaceship.toFloat32Array(), gl.STATIC_DRAW);
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(0, 0, 0, 0);
@@ -90,19 +97,19 @@ window.addEventListener('DOMContentLoaded', () => {
   gl.useProgram(program);
   gl.enableVertexAttribArray(posAttrLoc);
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-  
-  const size = 2;
+
+  const vertexSize = 2;
   const type = gl.FLOAT;
   const normalize = false;
   const stride = 0;
   const offset = 0;
-  gl.vertexAttribPointer(posAttrLoc, size, type, normalize, stride, offset);
+  gl.vertexAttribPointer(posAttrLoc, vertexSize, type, normalize, stride, offset);
   gl.uniform4f(colorUniLoc, 1, 0, 0.5, 1.0);
-  gl.uniform4f(translateUniLoc, 0, -0.5, 0, 0);
+  gl.uniform4f(translateUniLoc, 0, -0, 0, 0);
 
   const primitiveType = gl.TRIANGLES;
   const drawOffset = 0;
-  const count = 3;
+  const count = spaceship.length;
   gl.drawArrays(primitiveType, drawOffset, count);
 
   console.log("Initialization successful!");
