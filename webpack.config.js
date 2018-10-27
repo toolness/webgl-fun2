@@ -9,13 +9,14 @@ module.exports = {
     path: path.join(__dirname, 'static')
   },
   resolve: {
-    // Add `.ts` and `.tsx` as a resolvable extension.
-    extensions: [".ts", ".tsx", ".js"]
+    extensions: [".ts", ".tsx", ".js", ".glsl"]
   },
   module: {
     rules: [
       // all files with a `.ts` or `.tsx` extension will be handled by `ts-loader`
-      { test: /\.tsx?$/, loader: "ts-loader" }
+      { test: /\.tsx?$/, exclude: /node_modules/, loader: "ts-loader" },
+      { test: /\.glsl$/, exclude: /node_modules/,
+        loader: path.resolve(__dirname, 'glsl-loader.js') }
     ]
   },
   devServer: {
