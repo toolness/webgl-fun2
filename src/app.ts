@@ -1,5 +1,6 @@
 import { Points2D } from "./points-2d";
 import { GlUniformVector, GlProgram, getAttribLocation } from "./webgl";
+import { Points2DRenderer } from "./points-2d-renderer";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -26,42 +27,6 @@ class SimpleGlProgram extends GlProgram {
   }
 }
 
-class Points2DDrawer {
-  buffer: WebGLBuffer;
-
-  constructor(readonly gl: WebGLRenderingContext, readonly points: Points2D) {
-    const buffer = gl.createBuffer();
-
-    if (buffer === null) {
-      throw new Error("gl.createBuffer() failed!");
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, points.toFloat32Array(), gl.STATIC_DRAW);
-
-    this.buffer = buffer;
-  }
-
-  draw(attributeLocation: number) {
-    const { gl } = this;
-
-    gl.enableVertexAttribArray(attributeLocation);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
-
-    const vertexSize = 2;
-    const type = gl.FLOAT;
-    const normalize = false;
-    const stride = 0;
-    const offset = 0;
-    gl.vertexAttribPointer(attributeLocation, vertexSize, type, normalize, stride, offset);
-  
-    const primitiveType = gl.TRIANGLES;
-    const drawOffset = 0;
-    const count = this.points.length;
-    gl.drawArrays(primitiveType, drawOffset, count);  
-  }
-}
-
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -74,7 +39,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
-  const spaceship = new Points2DDrawer(gl, makeSpaceship());
+  const spaceship = new Points2DRenderer(program, makeSpaceship());
 
   console.log("Initialization successful!");
 
@@ -84,5 +49,5 @@ window.addEventListener('DOMContentLoaded', () => {
   program.activate();
   program.color.set([1, 0, 0.5, 1.0])
   program.translate.set([0, 0, 0, 0]);
-  spaceship.draw(program.positionAttributeLocation);
+  spaceship.draw();
 });
