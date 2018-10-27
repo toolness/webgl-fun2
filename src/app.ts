@@ -53,12 +53,16 @@ window.addEventListener('load', () => {
   const fragmentShader = createShader(gl, WebGLRenderingContext.FRAGMENT_SHADER, fragmentShaderSrc);
   const program = createProgram(gl, vertexShader, fragmentShader);
 
+  const colorUniLoc = gl.getUniformLocation(program, 'u_color');
+
+  if (colorUniLoc === -1) throw fail("unable to find uniform u_color!");
+
   const posAttrLoc = gl.getAttribLocation(program, 'a_position');
 
   if (posAttrLoc === -1) throw fail("unable to find attribute a_position!");
 
   const posBuffer = gl.createBuffer();
-  
+
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
   const positions = [
     0, 0,
@@ -80,6 +84,7 @@ window.addEventListener('load', () => {
   const stride = 0;
   const offset = 0;
   gl.vertexAttribPointer(posAttrLoc, size, type, normalize, stride, offset);
+  gl.uniform4f(colorUniLoc, 1, 0, 0.5, 1.0);
 
   const primitiveType = gl.TRIANGLES;
   const drawOffset = 0;
