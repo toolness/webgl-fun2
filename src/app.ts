@@ -1,3 +1,5 @@
+import { vec4 } from "gl-matrix";
+
 const vertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const fragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
@@ -77,12 +79,13 @@ window.addEventListener('load', () => {
   const posBuffer = gl.createBuffer();
 
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-  const positions = [
+
+  const positions = new Float32Array([
     0, 0,
     0, 0.5,
     0.7, 0
-  ];
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+  ]);
+  gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(0, 0, 0, 0);
@@ -91,18 +94,18 @@ window.addEventListener('load', () => {
   gl.enableVertexAttribArray(posAttrLoc);
   gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
   
-  const size = 2;
+  const vertexSize = 2;
   const type = gl.FLOAT;
   const normalize = false;
   const stride = 0;
   const offset = 0;
-  gl.vertexAttribPointer(posAttrLoc, size, type, normalize, stride, offset);
-  gl.uniform4f(colorUniLoc, 1, 0, 0.5, 1.0);
-  gl.uniform4f(translateUniLoc, 0, -0.5, 0, 0);
+  gl.vertexAttribPointer(posAttrLoc, vertexSize, type, normalize, stride, offset);
+  gl.uniform4fv(colorUniLoc, vec4.fromValues(1, 0, 0.5, 1.0));
+  gl.uniform4fv(translateUniLoc, vec4.fromValues(0, -0.5, 0, 0));
 
   const primitiveType = gl.TRIANGLES;
   const drawOffset = 0;
-  const count = 3;
+  const count = positions.length / vertexSize;
   gl.drawArrays(primitiveType, drawOffset, count);
 
   console.log("Initialization successful!");
