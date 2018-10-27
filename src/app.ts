@@ -39,6 +39,26 @@ function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fra
   return program;
 }
 
+function getUniformLocation(gl: WebGLRenderingContext, program: WebGLProgram, name: string): WebGLUniformLocation {
+  const loc = gl.getUniformLocation(program, name);
+
+  if (loc === null) {
+    throw new Error(`Unable to find uniform '${name}'!`);
+  }
+
+  return loc;
+}
+
+function getAttribLocation(gl: WebGLRenderingContext, program: WebGLProgram, name: string): number {
+  const loc = gl.getAttribLocation(program, name);
+
+  if (loc === -1) {
+    throw new Error(`Unable to find attribute '${name}'!`);
+  }
+
+  return loc;
+}
+
 window.addEventListener('load', () => {
   const canvas = document.createElement('canvas');
 
@@ -53,13 +73,8 @@ window.addEventListener('load', () => {
   const fragmentShader = createShader(gl, WebGLRenderingContext.FRAGMENT_SHADER, fragmentShaderSrc);
   const program = createProgram(gl, vertexShader, fragmentShader);
 
-  const colorUniLoc = gl.getUniformLocation(program, 'u_color');
-
-  if (colorUniLoc === -1) throw fail("unable to find uniform u_color!");
-
-  const posAttrLoc = gl.getAttribLocation(program, 'a_position');
-
-  if (posAttrLoc === -1) throw fail("unable to find attribute a_position!");
+  const colorUniLoc = getUniformLocation(gl, program, 'u_color');
+  const posAttrLoc = getAttribLocation(gl, program, 'a_position');
 
   const posBuffer = gl.createBuffer();
 
