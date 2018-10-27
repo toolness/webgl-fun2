@@ -55,7 +55,7 @@ function getAttribLocation(gl: WebGLRenderingContext, program: WebGLProgram, nam
   return loc;
 }
 
-window.addEventListener('load', () => {
+window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
   document.body.appendChild(canvas);
