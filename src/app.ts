@@ -61,6 +61,7 @@ window.addEventListener('load', () => {
   document.body.appendChild(canvas);
   canvas.width = 400;
   canvas.height = 400;
+  canvas.style.border = '1px solid black';
 
   const gl = canvas.getContext('webgl');
   if (!gl) throw new Error("webgl is not supported on this browser!");
@@ -70,6 +71,7 @@ window.addEventListener('load', () => {
   const program = createProgram(gl, vertexShader, fragmentShader);
 
   const colorUniLoc = getUniformLocation(gl, program, 'u_color');
+  const translateUniLoc = getUniformLocation(gl, program, 'u_translate');
   const posAttrLoc = getAttribLocation(gl, program, 'a_position');
 
   const posBuffer = gl.createBuffer();
@@ -96,6 +98,7 @@ window.addEventListener('load', () => {
   const offset = 0;
   gl.vertexAttribPointer(posAttrLoc, size, type, normalize, stride, offset);
   gl.uniform4f(colorUniLoc, 1, 0, 0.5, 1.0);
+  gl.uniform4f(translateUniLoc, 0, -0.5, 0, 0);
 
   const primitiveType = gl.TRIANGLES;
   const drawOffset = 0;
