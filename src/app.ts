@@ -1,13 +1,9 @@
 const vertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const fragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-function fail(msg: string): Error {
-  return new Error(msg);
-}
-
 function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
-  if (!shader) throw fail("gl.createShader() failed!");
+  if (!shader) throw new Error("gl.createShader() failed!");
 
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
@@ -16,7 +12,7 @@ function createShader(gl: WebGLRenderingContext, type: number, source: string): 
   if (!success) {
     const msg = "Compiling shader failed: " + gl.getShaderInfoLog(shader);
     gl.deleteShader(shader);
-    throw fail(msg);
+    throw new Error(msg);
   }
 
   return shader;
@@ -24,7 +20,7 @@ function createShader(gl: WebGLRenderingContext, type: number, source: string): 
 
 function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
   const program = gl.createProgram();
-  if (!program) throw fail("gl.createProgram() failed!");
+  if (!program) throw new Error("gl.createProgram() failed!");
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
@@ -33,7 +29,7 @@ function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fra
   if (!success) {
     const msg = "Linking program failed: " + gl.getProgramInfoLog(program);
     gl.deleteProgram(program);
-    throw fail(msg);
+    throw new Error(msg);
   }
 
   return program;
@@ -67,7 +63,7 @@ window.addEventListener('load', () => {
   canvas.height = 400;
 
   const gl = canvas.getContext('webgl');
-  if (!gl) throw fail("webgl is not supported on this browser!");
+  if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const vertexShader = createShader(gl, WebGLRenderingContext.VERTEX_SHADER, vertexShaderSrc);
   const fragmentShader = createShader(gl, WebGLRenderingContext.FRAGMENT_SHADER, fragmentShaderSrc);
