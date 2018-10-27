@@ -1,7 +1,7 @@
 import { Points } from "./points";
 
-const vertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
-const fragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
+const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
+const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
 function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -66,6 +66,81 @@ function makeSpaceship(): Points {
   return leftHalf.concat(leftHalf.mirrorHorizontally());
 }
 
+class GlProgram {
+  readonly program: WebGLProgram;
+
+  constructor(readonly gl: WebGLRenderingContext, vertexShaderSrc: string, fragmentShaderSrc: string) {
+    const vertexShader = createShader(gl, WebGLRenderingContext.VERTEX_SHADER, vertexShaderSrc);
+    const fragmentShader = createShader(gl, WebGLRenderingContext.FRAGMENT_SHADER, fragmentShaderSrc);
+    this.program = createProgram(gl, vertexShader, fragmentShader);
+  }
+
+  activate() {
+    this.gl.useProgram(this.program);
+  }
+}
+
+class SimpleGlProgram extends GlProgram {
+  readonly color: GlUniformVector;
+  readonly translate: GlUniformVector;
+  readonly positionAttributeLocation: number;
+
+  constructor(gl: WebGLRenderingContext) {
+    super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
+    this.color = new GlUniformVector(this, 'u_color');
+    this.translate = new GlUniformVector(this, 'u_translate');
+    this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
+  }
+}
+
+class GlUniformVector {
+  location: WebGLUniformLocation;
+
+  constructor(readonly program: GlProgram, name: string) {
+    this.location = getUniformLocation(program.gl, program.program, name);
+  }
+
+  set(value: Float32List) {
+    this.program.gl.uniform4fv(this.location, value);
+  }
+}
+
+class PointsDrawer {
+  buffer: WebGLBuffer;
+
+  constructor(readonly gl: WebGLRenderingContext, readonly points: Points) {
+    const buffer = gl.createBuffer();
+
+    if (buffer === null) {
+      throw new Error("gl.createBuffer() failed!");
+    }
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, points.toFloat32Array(), gl.STATIC_DRAW);
+
+    this.buffer = buffer;
+  }
+
+  draw(attributeLocation: number) {
+    const { gl } = this;
+
+    gl.enableVertexAttribArray(attributeLocation);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
+    const vertexSize = 2;
+    const type = gl.FLOAT;
+    const normalize = false;
+    const stride = 0;
+    const offset = 0;
+    gl.vertexAttribPointer(attributeLocation, vertexSize, type, normalize, stride, offset);
+  
+    const primitiveType = gl.TRIANGLES;
+    const drawOffset = 0;
+    const count = this.points.length;
+    gl.drawArrays(primitiveType, drawOffset, count);  
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -77,40 +152,16 @@ window.addEventListener('DOMContentLoaded', () => {
   const gl = canvas.getContext('webgl');
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
-  const vertexShader = createShader(gl, WebGLRenderingContext.VERTEX_SHADER, vertexShaderSrc);
-  const fragmentShader = createShader(gl, WebGLRenderingContext.FRAGMENT_SHADER, fragmentShaderSrc);
-  const program = createProgram(gl, vertexShader, fragmentShader);
+  const program = new SimpleGlProgram(gl);
+  const spaceship = new PointsDrawer(gl, makeSpaceship());
 
-  const colorUniLoc = getUniformLocation(gl, program, 'u_color');
-  const translateUniLoc = getUniformLocation(gl, program, 'u_translate');
-  const posAttrLoc = getAttribLocation(gl, program, 'a_position');
-
-  const posBuffer = gl.createBuffer();
-
-  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-  const spaceship = makeSpaceship();
-  gl.bufferData(gl.ARRAY_BUFFER, spaceship.toFloat32Array(), gl.STATIC_DRAW);
+  console.log("Initialization successful!");
 
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clearColor(0, 0, 0, 0);
   gl.clear(gl.COLOR_BUFFER_BIT);
-  gl.useProgram(program);
-  gl.enableVertexAttribArray(posAttrLoc);
-  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-
-  const vertexSize = 2;
-  const type = gl.FLOAT;
-  const normalize = false;
-  const stride = 0;
-  const offset = 0;
-  gl.vertexAttribPointer(posAttrLoc, vertexSize, type, normalize, stride, offset);
-  gl.uniform4f(colorUniLoc, 1, 0, 0.5, 1.0);
-  gl.uniform4f(translateUniLoc, 0, -0, 0, 0);
-
-  const primitiveType = gl.TRIANGLES;
-  const drawOffset = 0;
-  const count = spaceship.length;
-  gl.drawArrays(primitiveType, drawOffset, count);
-
-  console.log("Initialization successful!");
+  program.activate();
+  program.color.set([1, 0, 0.5, 1.0])
+  program.translate.set([0, 0, 0, 0]);
+  spaceship.draw(program.positionAttributeLocation);
 });
