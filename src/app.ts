@@ -16,13 +16,11 @@ function makeSpaceship(): Points3D {
 }
 
 class SimpleGlProgram extends GlProgram {
-  readonly color: GlUniformVector;
   readonly transform: GlUniformMatrix3D;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
-    this.color = new GlUniformVector(this, 'u_color');
     this.transform = new GlUniformMatrix3D(this, 'u_transform');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
   }
@@ -35,10 +33,8 @@ class Spaceship {
   scale = 0.5;
   shipTheta = Math.random();
   shipThetaVelocity = Math.random() * 0.01;
-  color: number[];
 
   constructor(readonly z: number) {
-    this.color = [z, z, z, 1.0];
   }
 
   update() {
@@ -91,7 +87,6 @@ window.addEventListener('DOMContentLoaded', () => {
     program.activate();
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
-      program.color.set(spaceship.color);
       const baseTransform = new Matrix3D()
         .rotateZ(spaceship.orbitTheta)
         .translate(spaceship.distanceFromCenter, 0, spaceship.z)
