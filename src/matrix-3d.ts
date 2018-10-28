@@ -39,7 +39,7 @@ export class Matrix3D {
   }
 
   translate(v: Vector3D): Matrix3D;
-  translate(x: number, y: number): Matrix3D;
+  translate(x: number, y: number, z: number): Matrix3D;
 
   translate(x: Vector3D|number, y?: number, z?: number): Matrix3D {
     z = x instanceof Vector3D ? x.z : z || 0;

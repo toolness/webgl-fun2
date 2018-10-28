@@ -30,12 +30,16 @@ class SimpleGlProgram extends GlProgram {
 
 class Spaceship {
   orbitTheta = Math.random();
-  orbitThetaVelocity = Math.random() * 0.1;
+  orbitThetaVelocity = Math.random() * 0.01;
   distanceFromCenter = Math.random();
-  scale = Math.random() * 0.5;
+  scale = 0.5;
   shipTheta = Math.random();
-  shipThetaVelocity = Math.random() * 0.1;
-  color = [Math.random(), Math.random(), Math.random(), 1.0];
+  shipThetaVelocity = Math.random() * 0.01;
+  color: number[];
+
+  constructor(readonly z: number) {
+    this.color = [z, z, z, 1.0];
+  }
 
   update() {
     this.orbitTheta += this.orbitThetaVelocity;
@@ -57,30 +61,43 @@ window.addEventListener('DOMContentLoaded', () => {
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const spaceships: Spaceship[] = [];
-  const NUM_SPACESHIPS = 100;
+  const NUM_SPACESHIPS = 30;
+
+  // This is weird; we're temporarily stuffing the value of z in our homogeneous
+  // component w. In our vertex shader, we'll multiply every vertex by (1/w)
+  // to complete the perspective transformation.
+  //
+  // For more details, see:
+  //
+  // https://en.wikipedia.org/wiki/Transformation_matrix#Perspective_projection
+  const perspectiveTransform = new Matrix3D([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 1, 0]
+  ]);
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship());
+    spaceships.push(new Spaceship(0.3 + (i / NUM_SPACESHIPS) * 0.7));
   }
-
-  spaceships.sort((a, b) => a.scale < b.scale ? -1 : 1);
 
   console.log("Initialization successful!");
 
   const render = () => {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
       program.color.set(spaceship.color);
       const baseTransform = new Matrix3D()
         .rotateZ(spaceship.orbitTheta)
-        .translate(spaceship.distanceFromCenter, 0)
+        .translate(spaceship.distanceFromCenter, 0, spaceship.z)
         .scale(spaceship.scale)
         .rotateZ(spaceship.shipTheta);
-      program.transform.set(baseTransform);
+      program.transform.set(perspectiveTransform.multiply(baseTransform));
       spaceshipRenderer.draw();
       spaceship.update();
     });
