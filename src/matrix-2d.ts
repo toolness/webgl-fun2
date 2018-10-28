@@ -47,6 +47,14 @@ export class Matrix2D {
     ]));
   }
 
+  scale(v: number) {
+    return this.multiply(new Matrix2D([
+      [v, 0, 0],
+      [0, v, 0],
+      [0, 0, 1]
+    ]));
+  }
+
   rotate(radians: number) {
     // Deriving this requires the trigonometric identities for angle sums:
     // https://en.wikipedia.org/wiki/List_of_trigonometric_identities
