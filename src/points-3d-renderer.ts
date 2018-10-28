@@ -1,14 +1,14 @@
 import { GlProgram } from "./webgl";
-import { Points2D } from "./points-2d";
+import { Points3D } from "./points-3d";
 
-export interface Points2DRendererProgram extends GlProgram {
+export interface Points3DRendererProgram extends GlProgram {
   positionAttributeLocation: number;
 }
 
-export class Points2DRenderer {
+export class Points3DRenderer {
   buffer: WebGLBuffer;
 
-  constructor(readonly program: Points2DRendererProgram, readonly points: Points2D) {
+  constructor(readonly program: Points3DRendererProgram, readonly points: Points3D) {
     const { gl } = program;
     const buffer = gl.createBuffer();
 
@@ -28,7 +28,7 @@ export class Points2DRenderer {
     gl.enableVertexAttribArray(positionAttributeLocation);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
-    const vertexSize = 2;
+    const vertexSize = 3;
     const type = gl.FLOAT;
     const normalize = false;
     const stride = 0;

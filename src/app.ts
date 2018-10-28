@@ -1,29 +1,29 @@
-import { Points2D } from "./points-2d";
-import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat, GlUniformMatrix2D } from "./webgl";
-import { Points2DRenderer } from "./points-2d-renderer";
-import { Matrix2D, Vector2D } from "./matrix-2d";
+import { Points3D } from "./points-3d";
+import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat, GlUniformMatrix3D } from "./webgl";
+import { Points3DRenderer } from "./points-3d-renderer";
+import { Matrix3D } from "./matrix-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-function makeSpaceship(): Points2D {
-  const leftHalf = Points2D.fromArray([
-    -0.5, 0,
-    0, 0.75,
-    0, 0.15
+function makeSpaceship(): Points3D {
+  const leftHalf = Points3D.fromArray([
+    -0.5, 0, 0,
+    0, 0.75, 0,
+    0, 0.15, 0
   ]);
   return leftHalf.concat(leftHalf.mirrorHorizontally());
 }
 
 class SimpleGlProgram extends GlProgram {
   readonly color: GlUniformVector;
-  readonly transform: GlUniformMatrix2D;
+  readonly transform: GlUniformMatrix3D;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
     this.color = new GlUniformVector(this, 'u_color');
-    this.transform = new GlUniformMatrix2D(this, 'u_transform');
+    this.transform = new GlUniformMatrix3D(this, 'u_transform');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
   }
 }
@@ -55,7 +55,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
-  const spaceshipRenderer = new Points2DRenderer(program, makeSpaceship());
+  const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 100;
 
@@ -75,11 +75,11 @@ window.addEventListener('DOMContentLoaded', () => {
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
       program.color.set(spaceship.color);
-      const baseTransform = new Matrix2D()
-        .rotate(spaceship.orbitTheta)
+      const baseTransform = new Matrix3D()
+        .rotateZ(spaceship.orbitTheta)
         .translate(spaceship.distanceFromCenter, 0)
         .scale(spaceship.scale)
-        .rotate(spaceship.shipTheta);
+        .rotateZ(spaceship.shipTheta);
       program.transform.set(baseTransform);
       spaceshipRenderer.draw();
       spaceship.update();

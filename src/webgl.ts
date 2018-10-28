@@ -1,4 +1,4 @@
-import { Matrix2D } from "./matrix-2d";
+import { Matrix3D } from "./matrix-3d";
 
 function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -88,8 +88,8 @@ export class GlUniformFloat extends GlUniformBase {
   }
 }
 
-export class GlUniformMatrix2D extends GlUniformBase {
-  set(value: Matrix2D) {
-    this.program.gl.uniformMatrix3fv(this.location, false, value.toFloat32Array());
+export class GlUniformMatrix3D extends GlUniformBase {
+  set(value: Matrix3D) {
+    this.program.gl.uniformMatrix4fv(this.location, false, value.toFloat32Array());
   }
 }
