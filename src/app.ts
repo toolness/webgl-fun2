@@ -6,13 +6,32 @@ import { Matrix2D, Vector2D } from "./matrix-2d";
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-function makeSpaceship(): Points2D {
-  const leftHalf = Points2D.fromArray([
-    -0.5, 0,
-    0, 0.75,
-    0, 0.15
+function equilateralHeight(length: number): number {
+  return Math.sqrt(0.75 * Math.pow(length, 2));
+}
+
+function makeEquilateral(x: number, y: number, length: number) {
+  const halfLength = length / 2;
+  const halfHeight = equilateralHeight(length) / 2;
+  return Points2D.fromArray([
+    x - halfLength, y - halfHeight,
+    x, y + halfHeight,
+    x + halfLength, y - halfHeight
   ]);
-  return leftHalf.concat(leftHalf.mirrorHorizontally());
+}
+
+function makeSierpinksi(n: number, x: number = 0, y: number = 0, length: number = 2): Points2D {
+  if (n === 0) {
+    return makeEquilateral(x, y, length);
+  }
+  const smallerLength = length / 2;
+  const smallerHeight = equilateralHeight(smallerLength);
+  const halfSmallerHeight = smallerHeight / 2;
+  const halfSmallerLength = smallerLength / 2;
+  const top = makeSierpinksi(n - 1, x, y + halfSmallerHeight, smallerLength);
+  const left = makeSierpinksi(n - 1, x - halfSmallerLength, y - halfSmallerHeight, smallerLength);
+  const right = makeSierpinksi(n - 1, x + halfSmallerLength, y - halfSmallerHeight, smallerLength);
+  return top.concat(left).concat(right);
 }
 
 class SimpleGlProgram extends GlProgram {
@@ -28,21 +47,6 @@ class SimpleGlProgram extends GlProgram {
   }
 }
 
-class Spaceship {
-  orbitTheta = Math.random();
-  orbitThetaVelocity = Math.random() * 0.1;
-  distanceFromCenter = Math.random();
-  scale = Math.random() * 0.5;
-  shipTheta = Math.random();
-  shipThetaVelocity = Math.random() * 0.1;
-  color = [Math.random(), Math.random(), Math.random(), 1.0];
-
-  update() {
-    this.orbitTheta += this.orbitThetaVelocity;
-    this.shipTheta += this.shipThetaVelocity;
-  }
-};
-
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -55,36 +59,23 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
-  const spaceshipRenderer = new Points2DRenderer(program, makeSpaceship());
-  const spaceships: Spaceship[] = [];
-  const NUM_SPACESHIPS = 100;
+  const sierpinski = makeSierpinksi(6);
+  const sierpinskiRenderer = new Points2DRenderer(program, sierpinski);
+  let theta = 0;
 
-  for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship());
-  }
-
-  spaceships.sort((a, b) => a.scale < b.scale ? -1 : 1);
-
-  console.log("Initialization successful!");
+  console.log(`Initialization successful! Sierpinski has ${sierpinski.length / 3} triangles.`);
 
   const render = () => {
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     program.activate();
-    spaceshipRenderer.setupForDrawing();
-    spaceships.forEach(spaceship => {
-      program.color.set(spaceship.color);
-      const baseTransform = new Matrix2D()
-        .rotate(spaceship.orbitTheta)
-        .translate(spaceship.distanceFromCenter, 0)
-        .scale(spaceship.scale)
-        .rotate(spaceship.shipTheta);
-      program.transform.set(baseTransform);
-      spaceshipRenderer.draw();
-      spaceship.update();
-    });
+    sierpinskiRenderer.setupForDrawing();
+    program.color.set([1, 0, 0.5, 1.0]);
+    program.transform.set(new Matrix2D().rotate(theta));
+    sierpinskiRenderer.draw();
     window.requestAnimationFrame(render);
+    theta += 0.001;
   };
 
   render();

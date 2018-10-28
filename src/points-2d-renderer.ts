@@ -36,11 +36,10 @@ export class Points2DRenderer {
     gl.vertexAttribPointer(positionAttributeLocation, vertexSize, type, normalize, stride, offset);
   }
 
-  draw() {
+  draw(mode: number = WebGLRenderingContext.TRIANGLES) {
     const { gl } = this.program;
-    const primitiveType = gl.TRIANGLES;
     const drawOffset = 0;
     const count = this.points.length;
-    gl.drawArrays(primitiveType, drawOffset, count);  
+    gl.drawArrays(mode, drawOffset, count);  
   }
 }
