@@ -37,7 +37,7 @@ export class Matrix2D {
     return this.multiply(new Matrix2D([
       [1, 0, v.x],
       [0, 1, v.y],
-      [0, 0, v.w]
+      [0, 0, 1  ]
     ]));
   }
 
