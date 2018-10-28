@@ -42,6 +42,8 @@ export class Matrix2D {
   }
 
   rotate(radians: number) {
+    // Deriving this requires the trigonometric identities for angle sums:
+    // https://en.wikipedia.org/wiki/List_of_trigonometric_identities
     return this.multiply(new Matrix2D([
       [Math.cos(radians), -Math.sin(radians), 0],
       [Math.sin(radians),  Math.cos(radians), 0],
