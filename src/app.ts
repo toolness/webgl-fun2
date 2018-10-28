@@ -28,6 +28,21 @@ class SimpleGlProgram extends GlProgram {
   }
 }
 
+class Spaceship {
+  orbitTheta = Math.random();
+  orbitThetaVelocity = Math.random() * 0.1;
+  distanceFromCenter = Math.random();
+  scale = Math.random() * 0.5;
+  shipTheta = Math.random();
+  shipThetaVelocity = Math.random() * 0.1;
+  color = [Math.random(), Math.random(), Math.random(), 1.0];
+
+  update() {
+    this.orbitTheta += this.orbitThetaVelocity;
+    this.shipTheta += this.shipThetaVelocity;
+  }
+};
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -40,9 +55,15 @@ window.addEventListener('DOMContentLoaded', () => {
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
-  const spaceship = new Points2DRenderer(program, makeSpaceship());
-  let orbitTheta = 0;
-  let shipTheta = 0;
+  const spaceshipRenderer = new Points2DRenderer(program, makeSpaceship());
+  const spaceships: Spaceship[] = [];
+  const NUM_SPACESHIPS = 100;
+
+  for (let i = 0; i < NUM_SPACESHIPS; i++) {
+    spaceships.push(new Spaceship());
+  }
+
+  spaceships.sort((a, b) => a.scale < b.scale ? -1 : 1);
 
   console.log("Initialization successful!");
 
@@ -51,17 +72,19 @@ window.addEventListener('DOMContentLoaded', () => {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);
     program.activate();
-    program.color.set([1, 0, 0.5, 1.0]);
-    const baseTransform = new Matrix2D()
-      .rotate(orbitTheta)
-      .translate(0.6, 0)
-      .scale(0.25)
-      .rotate(shipTheta);
-    program.transform.set(baseTransform);
-    spaceship.draw();
+    spaceshipRenderer.setupForDrawing();
+    spaceships.forEach(spaceship => {
+      program.color.set(spaceship.color);
+      const baseTransform = new Matrix2D()
+        .rotate(spaceship.orbitTheta)
+        .translate(spaceship.distanceFromCenter, 0)
+        .scale(spaceship.scale)
+        .rotate(spaceship.shipTheta);
+      program.transform.set(baseTransform);
+      spaceshipRenderer.draw();
+      spaceship.update();
+    });
     window.requestAnimationFrame(render);
-    orbitTheta += 0.01;
-    shipTheta += 0.05;
   };
 
   render();

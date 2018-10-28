@@ -22,7 +22,7 @@ export class Points2DRenderer {
     this.buffer = buffer;
   }
 
-  draw() {
+  setupForDrawing() {
     const { gl, positionAttributeLocation } = this.program;
 
     gl.enableVertexAttribArray(positionAttributeLocation);
@@ -34,7 +34,10 @@ export class Points2DRenderer {
     const stride = 0;
     const offset = 0;
     gl.vertexAttribPointer(positionAttributeLocation, vertexSize, type, normalize, stride, offset);
+  }
 
+  draw() {
+    const { gl } = this.program;
     const primitiveType = gl.TRIANGLES;
     const drawOffset = 0;
     const count = this.points.length;
