@@ -66,6 +66,14 @@ export class Matrix2D {
   }
 
   multiply(m2: Matrix2D): Matrix2D {
+    // Conceptualy, it's easiest to think of matrix multiplication
+    // as a transformation of a coordinate system's basis
+    // vectors:
+    //
+    //   http://www.3blue1brown.com/essence-of-linear-algebra-page/
+    //
+    // This isn't particularly efficient code, but hopefully
+    // it is readable.
     const col1 = this.transformVector(m2.column(1));
     const col2 = this.transformVector(m2.column(2));
     const col3 = this.transformVector(m2.column(3));
