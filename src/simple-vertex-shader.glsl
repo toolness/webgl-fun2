@@ -1,15 +1,8 @@
 attribute vec4 a_position;
 
-uniform vec4 u_translate;
-uniform float u_rotate;
+uniform mat3 u_transform;
 
 void main() {
-  gl_Position = vec4(
-    // Deriving the rotation requires angle sum identities:
-    // https://en.wikipedia.org/wiki/List_of_trigonometric_identities#Angle_sum_and_difference_identities
-    a_position.x * cos(u_rotate) - a_position.y * sin(u_rotate) + u_translate.x,
-    a_position.x * sin(u_rotate) + a_position.y * cos(u_rotate) + u_translate.y,
-    0.0,
-    1.0
-  );
+  vec3 pos2d = vec3(a_position.x, a_position.y, a_position.w) * u_transform;
+  gl_Position = vec4(pos2d.x, pos2d.y, 0.0, pos2d.z);
 }

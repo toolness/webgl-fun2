@@ -1,6 +1,7 @@
 import { Points2D } from "./points-2d";
-import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat } from "./webgl";
+import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat, GlUniformMatrix2D } from "./webgl";
 import { Points2DRenderer } from "./points-2d-renderer";
+import { Matrix2D, Vector2D } from "./matrix-2d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -16,15 +17,13 @@ function makeSpaceship(): Points2D {
 
 class SimpleGlProgram extends GlProgram {
   readonly color: GlUniformVector;
-  readonly translate: GlUniformVector;
-  readonly rotate: GlUniformFloat;
+  readonly transform: GlUniformMatrix2D;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
     this.color = new GlUniformVector(this, 'u_color');
-    this.translate = new GlUniformVector(this, 'u_translate');
-    this.rotate = new GlUniformFloat(this, 'u_rotate');
+    this.transform = new GlUniformMatrix2D(this, 'u_transform');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
   }
 }
@@ -42,15 +41,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const program = new SimpleGlProgram(gl);
   const spaceship = new Points2DRenderer(program, makeSpaceship());
+  let theta = 0;
 
   console.log("Initialization successful!");
 
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clearColor(0, 0, 0, 0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  program.activate();
-  program.color.set([1, 0, 0.5, 1.0])
-  program.translate.set([0, 0, 0, 0]);
-  program.rotate.set(Math.PI / 4);
-  spaceship.draw();
+  const render = () => {
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    program.activate();
+    program.color.set([1, 0, 0.5, 1.0]);
+    const baseTransform = new Matrix2D()
+      .rotate(theta)
+      .translate(new Vector2D(0.6, 0))
+      .rotate(Math.PI / 4);
+    program.transform.set(baseTransform);
+    spaceship.draw();
+    window.requestAnimationFrame(render);
+    theta += 0.01;
+  };
+
+  render();
 });
