@@ -26,12 +26,14 @@ export class Matrix3D {
   }
 
   toFloat32Array(): Float32Array {
-    return new Float32Array(
-      this.values[0]
-        .concat(this.values[1])
-        .concat(this.values[2])
-        .concat(this.values[3])
-    );
+    // GLSL expects matrices to be laid out in column-major order, so we must oblige.
+    const m = this.valueAt;
+    return new Float32Array([
+      m(1, 1), m(2, 1), m(3, 1), m(4, 1),
+      m(1, 2), m(2, 2), m(3, 2), m(4, 2),
+      m(1, 3), m(2, 3), m(3, 3), m(4, 3),
+      m(1, 4), m(2, 4), m(3, 4), m(4, 4),
+    ]);
   }
 
   valueAt(row: Row, column: Column): number {
