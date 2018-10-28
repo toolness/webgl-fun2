@@ -76,6 +76,15 @@ export class Matrix3D {
     ]));
   }
 
+  rotateY(radians: number) {
+    return this.multiply(new Matrix3D([
+      [Math.cos(radians), 0, -Math.sin(radians), 0],
+      [0                , 1, 0                 , 0],
+      [Math.sin(radians), 0, Math.cos(radians) , 0],
+      [0                , 0, 0                 , 1]
+    ]));
+  }
+
   multiply(m2: Matrix3D): Matrix3D {
     // Conceptualy, it's easiest to think of matrix multiplication
     // as a transformation of a coordinate system's basis

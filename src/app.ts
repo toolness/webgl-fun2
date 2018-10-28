@@ -32,7 +32,7 @@ class Spaceship {
   distanceFromCenter = Math.random();
   scale = 0.5;
   shipTheta = Math.random();
-  shipThetaVelocity = Math.random() * 0.01;
+  shipThetaVelocity = Math.random() * 0.05;
 
   constructor(readonly z: number) {
   }
@@ -91,7 +91,7 @@ window.addEventListener('DOMContentLoaded', () => {
         .rotateZ(spaceship.orbitTheta)
         .translate(spaceship.distanceFromCenter, 0, spaceship.z)
         .scale(spaceship.scale)
-        .rotateZ(spaceship.shipTheta);
+        .rotateY(spaceship.shipTheta);
       program.transform.set(perspectiveTransform.multiply(baseTransform));
       spaceshipRenderer.draw();
       spaceship.update();
