@@ -41,7 +41,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const program = new SimpleGlProgram(gl);
   const spaceship = new Points2DRenderer(program, makeSpaceship());
-  let theta = 0;
+  let orbitTheta = 0;
+  let shipTheta = 0;
 
   console.log("Initialization successful!");
 
@@ -52,14 +53,15 @@ window.addEventListener('DOMContentLoaded', () => {
     program.activate();
     program.color.set([1, 0, 0.5, 1.0]);
     const baseTransform = new Matrix2D()
-      .rotate(theta)
+      .rotate(orbitTheta)
       .translate(0.6, 0)
       .scale(0.25)
-      .rotate(Math.PI / 4);
+      .rotate(shipTheta);
     program.transform.set(baseTransform);
     spaceship.draw();
     window.requestAnimationFrame(render);
-    theta += 0.01;
+    orbitTheta += 0.01;
+    shipTheta += 0.05;
   };
 
   render();
