@@ -53,7 +53,7 @@ window.addEventListener('DOMContentLoaded', () => {
     program.color.set([1, 0, 0.5, 1.0]);
     const baseTransform = new Matrix2D()
       .rotate(theta)
-      .translate(new Vector2D(0.6, 0))
+      .translate(0.6, 0)
       .rotate(Math.PI / 4);
     program.transform.set(baseTransform);
     spaceship.draw();

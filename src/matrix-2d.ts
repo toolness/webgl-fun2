@@ -33,11 +33,17 @@ export class Matrix2D {
     return this.values[row - 1][column - 1];
   }
 
-  translate(v: Vector2D) {
+  translate(v: Vector2D): Matrix2D;
+  translate(x: number, y: number): Matrix2D;
+
+  translate(x: Vector2D|number, y?: number): Matrix2D {
+    y = x instanceof Vector2D ? x.y : y || 0;
+    x = x instanceof Vector2D ? x.x : x;
+
     return this.multiply(new Matrix2D([
-      [1, 0, v.x],
-      [0, 1, v.y],
-      [0, 0, 1  ]
+      [1, 0, x],
+      [0, 1, y],
+      [0, 0, 1]
     ]));
   }
 
