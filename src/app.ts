@@ -47,8 +47,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
   document.body.appendChild(canvas);
-  canvas.width = 400;
-  canvas.height = 400;
+  canvas.width = 800;
+  canvas.height = 800;
   canvas.style.border = '1px solid black';
 
   const gl = canvas.getContext('webgl');
