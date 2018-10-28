@@ -1,5 +1,5 @@
 import { Points2D } from "./points-2d";
-import { GlUniformVector, GlProgram, getAttribLocation } from "./webgl";
+import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat } from "./webgl";
 import { Points2DRenderer } from "./points-2d-renderer";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
@@ -17,12 +17,14 @@ function makeSpaceship(): Points2D {
 class SimpleGlProgram extends GlProgram {
   readonly color: GlUniformVector;
   readonly translate: GlUniformVector;
+  readonly rotate: GlUniformFloat;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
     this.color = new GlUniformVector(this, 'u_color');
     this.translate = new GlUniformVector(this, 'u_translate');
+    this.rotate = new GlUniformFloat(this, 'u_rotate');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
   }
 }
@@ -49,5 +51,6 @@ window.addEventListener('DOMContentLoaded', () => {
   program.activate();
   program.color.set([1, 0, 0.5, 1.0])
   program.translate.set([0, 0, 0, 0]);
+  program.rotate.set(Math.PI / 4);
   spaceship.draw();
 });

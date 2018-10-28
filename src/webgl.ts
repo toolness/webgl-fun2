@@ -66,14 +66,22 @@ export class GlProgram {
   }
 }
 
-export class GlUniformVector {
+class GlUniformBase {
   location: WebGLUniformLocation;
 
   constructor(readonly program: GlProgram, name: string) {
     this.location = getUniformLocation(program.gl, program.program, name);
   }
+}
 
+export class GlUniformVector extends GlUniformBase {
   set(value: Float32List) {
     this.program.gl.uniform4fv(this.location, value);
+  }
+}
+
+export class GlUniformFloat extends GlUniformBase {
+  set(value: number) {
+    this.program.gl.uniform1f(this.location, value);
   }
 }
