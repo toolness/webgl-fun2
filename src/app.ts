@@ -15,6 +15,26 @@ function makeSpaceship(): Points3D {
   return leftHalf.concat(leftHalf.mirrorHorizontally());
 }
 
+function makeGround(y = -0.5, pointsPerAxis = 10): Points3D {
+  const points: number[] = [];
+  let xPart = -1;
+  let zPart = -1;
+  let partInc = 1 / pointsPerAxis;
+  console.log('start', xPart, y, zPart);
+  for (let x = 0; x < pointsPerAxis; x++) {
+    xPart += 2 * partInc;
+    for (let z = 0; z < pointsPerAxis; z++) {
+      zPart -= partInc;
+      console.log(xPart, y, zPart);
+      points.push(xPart, y, zPart);
+      points.push(xPart + (2 * partInc), y, zPart);
+      points.push(xPart + (2 * partInc), y, zPart - partInc);
+    }
+  }
+  console.log('end', xPart, y, zPart);
+  return Points3D.fromArray(points);
+}
+
 class SimpleGlProgram extends GlProgram {
   readonly transform: GlUniformMatrix3D;
   readonly positionAttributeLocation: number;
@@ -56,6 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
+  const groundRenderer = new Points3DRenderer(program, makeGround());
   const projectionTransform = Matrix3D.perspectiveProjection({
     top: 1,
     bottom: -1,
@@ -79,6 +100,9 @@ window.addEventListener('DOMContentLoaded', () => {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
+    groundRenderer.setupForDrawing();
+    program.transform.set(projectionTransform);
+    groundRenderer.draw(gl.LINE_LOOP);
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
       const baseTransform = new Matrix3D()
