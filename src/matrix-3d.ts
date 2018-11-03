@@ -1,3 +1,5 @@
+import { gluInvertMatrix } from "./glu-invert-matrix";
+
 type Column = 1|2|3|4;
 type Row = 1|2|3|4;
 
@@ -34,14 +36,30 @@ export class Matrix3D {
     this.valueAt = this.valueAt.bind(this);
   }
 
+  /**
+   * Convert the matrix into a Float32Array in column-major order
+   * (the layout that GLSL expects).
+   */
   toFloat32Array(): Float32Array {
-    // GLSL expects matrices to be laid out in column-major order, so we must oblige.
     const m = this.valueAt;
     return new Float32Array([
       m(1, 1), m(2, 1), m(3, 1), m(4, 1),
       m(1, 2), m(2, 2), m(3, 2), m(4, 2),
       m(1, 3), m(2, 3), m(3, 3), m(4, 3),
       m(1, 4), m(2, 4), m(3, 4), m(4, 4),
+    ]);
+  }
+
+  /**
+   * Convert the given float array, in column-major order, to a
+   * matrix.
+   */
+  static fromFloat32Array(m: Float32Array): Matrix3D {
+    return new Matrix3D([
+      [m[0], m[4], m[8], m[12]],
+      [m[1], m[5], m[9], m[13]],
+      [m[2], m[6], m[10], m[14]],
+      [m[3], m[7], m[11], m[15]]
     ]);
   }
 
@@ -136,6 +154,20 @@ export class Matrix3D {
       [col1.z, col2.z, col3.z, col4.z],
       [col1.w, col2.w, col3.w, col4.w],
     ]);
+  }
+
+  /**
+   * Return the inverse of the matrix.
+   * 
+   * If the matrix is non-invertible, an exception will
+   * be thrown.
+   */
+  inverse(): Matrix3D {
+    const inv = gluInvertMatrix(this.toFloat32Array());
+    if (inv === null) {
+      throw new Error('Matrix is non-invertible!');
+    }
+    return Matrix3D.fromFloat32Array(inv);
   }
 
   /**

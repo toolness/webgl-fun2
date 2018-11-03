@@ -22,14 +22,14 @@ function makeGround(y = -1, pointsPerAxis = 20): Points3D {
   let partInc = 1 / pointsPerAxis;
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
-    points.push(xPart, y, zPart - 1);
+    points.push(xPart, y, zPart - 2);
     xPart += 2 * partInc;
   }
   xPart = -1;
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
     points.push(xPart + 2, y, zPart);
-    zPart -= partInc;
+    zPart -= 2 * partInc;
   }
   return Points3D.fromArray(points);
 }
@@ -76,19 +76,24 @@ window.addEventListener('DOMContentLoaded', () => {
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const groundRenderer = new Points3DRenderer(program, makeGround());
-  const projectionTransform = Matrix3D.perspectiveProjection({
+  const baseProjectionTransform = Matrix3D.perspectiveProjection({
     top: 1,
     bottom: -1,
     right: 1,
     left: -1,
-    near: 1,
-    far: 2
+    near: 0.8,
+    far: 3
   });
+  const viewTransform = new Matrix3D()
+    .rotateY(Math.PI / 5)
+    .translate(-1.2, 0, 0.5)
+    .inverse();
+  const projectionTransform = baseProjectionTransform.multiply(viewTransform);
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship(-1 - (0.3 + (i / NUM_SPACESHIPS) * 0.7)));
+    spaceships.push(new Spaceship(-1 - (0.3 + (i / NUM_SPACESHIPS) * 1.4)));
   }
 
   console.log("Initialization successful!");
