@@ -3,6 +3,11 @@ import { gluInvertMatrix } from "./glu-invert-matrix";
 type Column = 1|2|3|4;
 type Row = 1|2|3|4;
 
+/**
+ * A 4x4 matrix represented as
+ * a two-dimensional array in
+ * row-major order.
+ */
 type Matrix3DTuple = [
   [number, number, number, number],
   [number, number, number, number],
@@ -26,11 +31,20 @@ const IDENTITY: Matrix3DTuple = [
   [0, 0, 0, 1]
 ];
 
+/** 
+ * A three-dimensional vector. Note that it actually has
+ * four elements because we use a homogeneous coordinate
+ * system.
+ */
 export class Vector3D {
   constructor(readonly x: number, readonly y: number, readonly z: number, readonly w: number = 1.0) {
   }
 }
 
+/**
+ * A three-dimensional matrix. Note that it ultimately represents a 4x4
+ * matrix because we use homogeneous coordinates.
+ */
 export class Matrix3D {
   constructor(readonly values: Matrix3DTuple = IDENTITY) {
     this.valueAt = this.valueAt.bind(this);
