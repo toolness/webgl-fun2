@@ -20,10 +20,16 @@ function makeGround(y = -1, pointsPerAxis = 20): Points3D {
   let xPart = -1;
   let zPart = -1;
   let partInc = 1 / pointsPerAxis;
-  for (let x = 0; x <= pointsPerAxis; x++) {
+  for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
     points.push(xPart, y, zPart - 1);
     xPart += 2 * partInc;
+  }
+  xPart = -1;
+  for (let i = 0; i <= pointsPerAxis; i++) {
+    points.push(xPart, y, zPart);
+    points.push(xPart + 2, y, zPart);
+    zPart -= partInc;
   }
   return Points3D.fromArray(points);
 }
