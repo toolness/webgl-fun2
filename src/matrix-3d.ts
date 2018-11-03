@@ -139,6 +139,22 @@ export class Matrix3D {
   }
 
   /**
+   * Apply the given function to every element of the matrix, returning
+   * a new one.
+   */
+  map(f: (value: number) => number): Matrix3D {
+    return new Matrix3D(this.values.map(row => row.map(f)) as Matrix3DTuple);
+  }
+
+  /**
+   * Multiply all elements of the matrix by the given constant,
+   * returning a new matrix.
+   */
+  multiplyByConstant(n: number): Matrix3D {
+    return this.map(value => value * n);
+  }
+
+  /**
    * Create a matrix that transforms eye coordinates into clip
    * coordinates.
    * 
