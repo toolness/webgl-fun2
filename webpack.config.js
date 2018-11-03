@@ -1,8 +1,9 @@
 const path = require('path');
+const isDevServer = /webpack-dev-server/.test(process.argv[1]);
 
 module.exports = {
-  mode: "development",
-  devtool: "inline-source-map",
+  mode: isDevServer ? "development" : "production",
+  devtool: isDevServer ? "inline-source-map" : "source-map",
   entry: "./src/app.ts",
   output: {
     filename: "app.bundle.js",
