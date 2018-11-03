@@ -85,7 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
         .rotateZ(spaceship.orbitTheta)
         .translate(spaceship.distanceFromCenter, 0, spaceship.z)
         .scale(spaceship.scale)
-        .rotateX(spaceship.shipTheta);
+        .rotateY(spaceship.shipTheta);
       program.transform.set(projectionTransform.multiply(baseTransform));
       spaceshipRenderer.draw();
       spaceship.update();
