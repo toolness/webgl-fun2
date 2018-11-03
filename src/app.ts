@@ -4,7 +4,7 @@ import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D } from "./matrix-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
-const simpleFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
+const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
 
 function makeSpaceship(): Points3D {
   const leftHalf = Points3D.fromArray([
@@ -20,7 +20,7 @@ class SimpleGlProgram extends GlProgram {
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
-    super(gl, simpleVertexShaderSrc, simpleFragmentShaderSrc);
+    super(gl, simpleVertexShaderSrc, zBufferFragmentShaderSrc);
     this.transform = new GlUniformMatrix3D(this, 'u_transform');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
   }
