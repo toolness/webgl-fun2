@@ -15,23 +15,16 @@ function makeSpaceship(): Points3D {
   return leftHalf.concat(leftHalf.mirrorHorizontally());
 }
 
-function makeGround(y = -0.5, pointsPerAxis = 10): Points3D {
+function makeGround(y = -1, pointsPerAxis = 20): Points3D {
   const points: number[] = [];
   let xPart = -1;
   let zPart = -1;
   let partInc = 1 / pointsPerAxis;
-  console.log('start', xPart, y, zPart);
-  for (let x = 0; x < pointsPerAxis; x++) {
+  for (let x = 0; x <= pointsPerAxis; x++) {
+    points.push(xPart, y, zPart);
+    points.push(xPart, y, zPart - 1);
     xPart += 2 * partInc;
-    for (let z = 0; z < pointsPerAxis; z++) {
-      zPart -= partInc;
-      console.log(xPart, y, zPart);
-      points.push(xPart, y, zPart);
-      points.push(xPart + (2 * partInc), y, zPart);
-      points.push(xPart + (2 * partInc), y, zPart - partInc);
-    }
   }
-  console.log('end', xPart, y, zPart);
   return Points3D.fromArray(points);
 }
 
@@ -102,7 +95,7 @@ window.addEventListener('DOMContentLoaded', () => {
     program.activate();
     groundRenderer.setupForDrawing();
     program.transform.set(projectionTransform);
-    groundRenderer.draw(gl.LINE_LOOP);
+    groundRenderer.draw(gl.LINES);
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
       const baseTransform = new Matrix3D()
