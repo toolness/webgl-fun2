@@ -22,14 +22,14 @@ function makeGround(y = -1, pointsPerAxis = 20): Points3D {
   let partInc = 1 / pointsPerAxis;
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
-    points.push(xPart, y, zPart - 2);
+    points.push(xPart, y, zPart + 2);
     xPart += 2 * partInc;
   }
   xPart = -1;
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
     points.push(xPart + 2, y, zPart);
-    zPart -= 2 * partInc;
+    zPart += 2 * partInc;
   }
   return Points3D.fromArray(points);
 }
@@ -81,24 +81,29 @@ window.addEventListener('DOMContentLoaded', () => {
     bottom: -1,
     right: 1,
     left: -1,
-    near: 0.8,
+    near: 1,
     far: 3
   });
-  const viewTransform = new Matrix3D()
-    .rotateY(Math.PI / 5)
-    .translate(-1.2, 0, 0.5)
-    .inverse();
-  const projectionTransform = baseProjectionTransform.multiply(viewTransform);
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship(-1 - (0.3 + (i / NUM_SPACESHIPS) * 1.4)));
+    spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
   }
 
   console.log("Initialization successful!");
 
+  let cameraRotation = 0;
+
   const render = () => {
+    const viewTransform = new Matrix3D()
+      .rotateY(cameraRotation)
+      .translate(0, 0, 2.25)
+      .inverse();
+    const projectionTransform = baseProjectionTransform.multiply(viewTransform);
+
+    cameraRotation += 0.001;
+
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.enable(gl.DEPTH_TEST);
     gl.clearColor(0, 0, 0, 0);
