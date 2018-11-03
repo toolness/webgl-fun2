@@ -12,6 +12,17 @@ npm start
 
 Then visit http://localhost:8080 in a browser.
 
+## Deployment
+
+To build a deployment for hosting on a static site, run:
+
+```
+npm run build
+```
+
+Then copy the `static` folder somewhere. You can also run
+`npm run deploy` to both build the site and deploy it to GitHub Pages.
+
 ## License
 
 This is free and unencumbered software released into the public domain.
