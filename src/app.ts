@@ -1,5 +1,5 @@
 import { Points3D } from "./points-3d";
-import { GlUniformVector, GlProgram, getAttribLocation, GlUniformFloat, GlUniformMatrix3D } from "./webgl";
+import { GlProgram, getAttribLocation, GlUniformMatrix3D } from "./webgl";
 import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D } from "./matrix-3d";
 
@@ -56,25 +56,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
+  const projectionTransform = Matrix3D.perspectiveProjection({
+    top: 1,
+    bottom: -1,
+    right: 1,
+    left: -1,
+    near: 1,
+    far: 2
+  });
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
 
-  // This is weird; we're temporarily stuffing the value of z in our homogeneous
-  // component w. In our vertex shader, we'll multiply every vertex by (1/w)
-  // to complete the perspective transformation.
-  //
-  // For more details, see:
-  //
-  // https://en.wikipedia.org/wiki/Transformation_matrix#Perspective_projection
-  const perspectiveTransform = new Matrix3D([
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, 0],
-    [0, 0, 1, 0]
-  ]);
-
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship(0.3 + (i / NUM_SPACESHIPS) * 0.7));
+    spaceships.push(new Spaceship(-1 - (0.3 + (i / NUM_SPACESHIPS) * 0.7)));
   }
 
   console.log("Initialization successful!");
@@ -92,7 +86,7 @@ window.addEventListener('DOMContentLoaded', () => {
         .translate(spaceship.distanceFromCenter, 0, spaceship.z)
         .scale(spaceship.scale)
         .rotateY(spaceship.shipTheta);
-      program.transform.set(perspectiveTransform.multiply(baseTransform));
+      program.transform.set(projectionTransform.multiply(baseTransform));
       spaceshipRenderer.draw();
       spaceship.update();
     });

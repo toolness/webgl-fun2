@@ -8,6 +8,15 @@ type Matrix3DTuple = [
   [number, number, number, number]
 ];
 
+type PerspectiveOptions = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  near: number;
+  far: number;
+};
+
 const IDENTITY: Matrix3DTuple = [
   [1, 0, 0, 0],
   [0, 1, 0, 0],
@@ -103,6 +112,41 @@ export class Matrix3D {
       [col1.y, col2.y, col3.y, col4.y],
       [col1.z, col2.z, col3.z, col4.z],
       [col1.w, col2.w, col3.w, col4.w],
+    ]);
+  }
+
+  /**
+   * Create a matrix that transforms eye coordinates into clip
+   * coordinates.
+   * 
+   * Note that clip coordinates will likely have a w-component
+   * that is not 1; the GPU will perform a perspective divide
+   * after the vertex shader to convert the clip coordinates
+   * into normalized device coordinates (NDC).
+   * 
+   * Note also that the near and far parameters must be
+   * specified as positive numbers, as the clip coordinates
+   * use a left-handed coordinate system, while the
+   * eye coordinates use a right-handed coordinate system,
+   * and the projection matrix will convert between the
+   * two.
+   * 
+   * For more details, as well as an excellent derivation
+   * of all the math behind all this, see:
+   * 
+   *   http://www.songho.ca/opengl/gl_projectionmatrix.html#perspective
+   */
+  static perspectiveProjection(options: PerspectiveOptions): Matrix3D {
+    const { near, far, left, right, top, bottom } = options;
+    const width = right - left;
+    const height = top - bottom;
+    const depth = far - near;
+    const doubleNear = 2 * near;
+    return new Matrix3D([
+      [doubleNear / width, 0, (right + left) / width, 0],
+      [0, doubleNear / height, (top + bottom) / height, 0],
+      [0, 0, -(far + near) / depth, -2 * far * near / depth],
+      [0, 0, -1, 0]
     ]);
   }
 
