@@ -74,32 +74,46 @@ export class Matrix3D {
     ]));
   }
 
-  rotateZ(radians: number) {
-    // Deriving this requires the trigonometric identities for angle sums:
-    // https://en.wikipedia.org/wiki/List_of_trigonometric_identities
-    return this.multiply(new Matrix3D([
-      [Math.cos(radians), -Math.sin(radians), 0, 0],
-      [Math.sin(radians),  Math.cos(radians), 0, 0],
-      [0                ,  0                , 1, 0],
-      [0                ,  0                , 0, 1]
-    ]));
-  }
-
-  rotateY(radians: number) {
-    return this.multiply(new Matrix3D([
-      [Math.cos(radians), 0, -Math.sin(radians), 0],
-      [0                , 1, 0                 , 0],
-      [Math.sin(radians), 0, Math.cos(radians) , 0],
-      [0                , 0, 0                 , 1]
-    ]));
-  }
-
+  /** Rotate counter-clockwise around the X axis. */
   rotateX(radians: number) {
+    // Deriving this requires the trigonometric identities for angle sums:
+    //
+    //   https://en.wikipedia.org/wiki/List_of_trigonometric_identities
+    //
+    // That said, I think an alternative approach is to think of rotation
+    // as transformation of basis vectors via matrix multiplication,
+    // which simplifies things conceptually.
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
     return this.multiply(new Matrix3D([
-      [1, 0                 , 0                , 0],
-      [0, Math.cos(radians) , Math.sin(radians), 0],
-      [0, -Math.sin(radians), Math.cos(radians), 0],
-      [0, 0                 , 0                , 1]
+      [1,  0, 0, 0],
+      [0,  c, s, 0],
+      [0, -s, c, 0],
+      [0,  0, 0, 1]
+    ]));
+  }
+
+  /** Rotate counter-clockwise around the Y axis. */
+  rotateY(radians: number) {
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    return this.multiply(new Matrix3D([
+      [c, 0, -s, 0],
+      [0, 1,  0, 0],
+      [s, 0,  c, 0],
+      [0, 0,  0, 1]
+    ]));
+  }
+
+  /** Rotate counter-clockwise around the Z axis. */
+  rotateZ(radians: number) {
+    const c = Math.cos(radians);
+    const s = Math.sin(radians);
+    return this.multiply(new Matrix3D([
+      [c, -s, 0, 0],
+      [s,  c, 0, 0],
+      [0,  0, 1, 0],
+      [0,  0, 0, 1]
     ]));
   }
 
