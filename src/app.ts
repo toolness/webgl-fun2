@@ -76,6 +76,39 @@ class Spaceship {
   }
 };
 
+/**
+ * Convert the given pixel coordinates on the given canvas to
+ * WebGL/OpenGL normalized device coordinates (NDC).
+ */
+function screenCoordsToNDC(canvas: HTMLCanvasElement, x: number, y: number): Vector3D {
+  return new Vector3D(
+    -1 + (x / canvas.width) * 2,
+    // We need to flip the y-axis.
+    (-1 + (y / canvas.height) * 2) * -1,
+    // The z-coordinate of the near clipping plane is -1 in NDC.
+    -1
+  );
+}
+
+function getCameraPosition(cameraTransform: Matrix3D): Vector3D {
+  return cameraTransform.transformVector(new Vector3D(0, 0, 0));
+}
+
+/**
+ * Calculate the vector representing the ray from the
+ * camera to the given screen point.
+ */
+function getCameraRay(screenPointNDC: Vector3D, cameraPosition: Vector3D, projectionTransform: Matrix3D): Vector3D {
+  const inverseProjectionTransform = projectionTransform.inverse();
+
+  // I'm not actually 100% sure if I'm doing the right thing here
+  // mathematically, but it makes sense intuitively and seems to work
+  // in practice.
+  const screenPointInWorld = inverseProjectionTransform.transformVector(screenPointNDC).perspectiveDivide();
+
+  return screenPointInWorld.minus(cameraPosition);
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -108,12 +141,7 @@ window.addEventListener('DOMContentLoaded', () => {
     spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
   }
 
-  canvas.onclick = (e) => {
-    const x = -1 + (e.offsetX / canvas.width) * 2;
-    const y = (-1 + (e.offsetY / canvas.height) * 2) * -1;
-
-    screenClick = [x, y];
-  };
+  canvas.onclick = (e) => { screenClick = [e.offsetX, e.offsetY]; };
 
   console.log("Initialization successful!");
 
@@ -127,13 +155,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const projectionTransform = baseProjectionTransform.multiply(viewTransform);
 
     if (screenClick && latestScreenClick !== screenClick) {
-      const inverseProjectionTransform = projectionTransform.inverse();
-      const screenPoint = new Vector3D(screenClick[0], screenClick[1], -1);
-      const screenPointInWorld = inverseProjectionTransform.transformVector(screenPoint).perspectiveDivide();
-      const cameraInWorld = cameraTransform.transformVector(new Vector3D(0, 0, 0));
-      const ray = screenPointInWorld.minus(cameraInWorld);
+      const cameraPosition = getCameraPosition(cameraTransform);
+      const ray = getCameraRay(
+        screenCoordsToNDC(canvas, screenClick[0], screenClick[1]),
+        cameraPosition,
+        projectionTransform,
+      );
 
-      rayRenderer = new Points3DRenderer(program, makeRay(cameraInWorld, ray));
+      rayRenderer = new Points3DRenderer(program, makeRay(cameraPosition, ray));
       latestScreenClick = screenClick;
     }
 
