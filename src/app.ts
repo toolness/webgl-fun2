@@ -109,6 +109,33 @@ function getCameraRay(screenPointNDC: Vector3D, cameraPosition: Vector3D, projec
   return screenPointInWorld.minus(cameraPosition);
 }
 
+/**
+ * Convenience class to store a value and detect
+ * whether it has changed since the last time
+ * we checked.
+ */
+class CheckableValue<T> {
+  private lastCheckedValue: T|null = null;
+  private value: T|null = null;
+
+  /** Set the value. */
+  set(value: T) {
+    this.value = value;
+  }
+
+  /**
+   * Return the value if it has changed since the last
+   * time we checked. Otherwise, return null.
+   */
+  check(): T|null {
+    if (this.value === this.lastCheckedValue) {
+      return null;
+    }
+    this.lastCheckedValue = this.value;
+    return this.value;
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -134,14 +161,13 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
-  let screenClick: [number, number]|null = null;
-  let latestScreenClick: [number, number]|null = null;
+  let screenClick = new CheckableValue<{x: number, y: number}>();
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
     spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
   }
 
-  canvas.onclick = (e) => { screenClick = [e.offsetX, e.offsetY]; };
+  canvas.onclick = (e) => { screenClick.set({x: e.offsetX, y: e.offsetY}); };
 
   console.log("Initialization successful!");
 
@@ -154,16 +180,15 @@ window.addEventListener('DOMContentLoaded', () => {
     const viewTransform = cameraTransform.inverse();
     const projectionTransform = baseProjectionTransform.multiply(viewTransform);
 
-    if (screenClick && latestScreenClick !== screenClick) {
+    const latestScreenClick = screenClick.check();
+    if (latestScreenClick) {
       const cameraPosition = getCameraPosition(cameraTransform);
       const ray = getCameraRay(
-        screenCoordsToNDC(canvas, screenClick[0], screenClick[1]),
+        screenCoordsToNDC(canvas, latestScreenClick.x, latestScreenClick.y),
         cameraPosition,
         projectionTransform,
       );
-
       rayRenderer = new Points3DRenderer(program, makeRay(cameraPosition, ray));
-      latestScreenClick = screenClick;
     }
 
     cameraRotation += 0.001;
