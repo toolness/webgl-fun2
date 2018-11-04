@@ -124,15 +124,18 @@ class CheckableValue<T> {
   }
 
   /**
-   * Return the value if it has changed since the last
-   * time we checked. Otherwise, return null.
+   * If the value has changed since the last
+   * time we checked, pass it to the given callback
+   * function. Otherwise, do nothing.
    */
-  check(): T|null {
+  check(cb: (value: T) => void) {
     if (this.value === this.lastCheckedValue) {
-      return null;
+      return;
     }
     this.lastCheckedValue = this.value;
-    return this.value;
+    if (this.value) {
+      cb(this.value);
+    }
   }
 }
 
@@ -180,16 +183,15 @@ window.addEventListener('DOMContentLoaded', () => {
     const viewTransform = cameraTransform.inverse();
     const projectionTransform = baseProjectionTransform.multiply(viewTransform);
 
-    const latestScreenClick = screenClick.check();
-    if (latestScreenClick) {
+    screenClick.check(coords => {
       const cameraPosition = getCameraPosition(cameraTransform);
       const ray = getCameraRay(
-        screenCoordsToNDC(canvas, latestScreenClick.x, latestScreenClick.y),
+        screenCoordsToNDC(canvas, coords.x, coords.y),
         cameraPosition,
         projectionTransform,
       );
       rayRenderer = new Points3DRenderer(program, makeRay(cameraPosition, ray));
-    }
+    });
 
     cameraRotation += 0.001;
 
