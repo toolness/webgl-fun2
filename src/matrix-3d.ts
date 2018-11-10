@@ -1,5 +1,3 @@
-import { gluInvertMatrix } from "./glu-invert-matrix";
-
 type Column = 1|2|3|4;
 type Row = 1|2|3|4;
 
@@ -205,20 +203,6 @@ export class Matrix3D {
       [col1.z, col2.z, col3.z, col4.z],
       [col1.w, col2.w, col3.w, col4.w],
     ]);
-  }
-
-  /**
-   * Return the inverse of the matrix.
-   * 
-   * If the matrix is non-invertible, an exception will
-   * be thrown.
-   */
-  inverse(): Matrix3D {
-    const inv = gluInvertMatrix(this.toFloat32Array());
-    if (inv === null) {
-      throw new Error('Matrix is non-invertible!');
-    }
-    return Matrix3D.fromFloat32Array(inv);
   }
 
   /**
