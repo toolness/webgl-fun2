@@ -4,19 +4,10 @@ import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 import { makeSpaceship, makeGround, makeRay } from "./shapes";
+import { Point2D, screenCoordsToWorld } from "./screen-space";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
-
-type Point2D = {
-  x: number,
-  y: number
-};
-
-type Dimensions2D = {
-  width: number,
-  height: number
-};
 
 class SimpleGlProgram extends GlProgram {
   readonly transform: GlUniformMatrix3D;
@@ -45,41 +36,6 @@ class Spaceship {
     this.shipTheta += this.shipThetaVelocity;
   }
 };
-
-/**
- * Convert the given screen coordinates, in pixels, to
- * eye coordinates (from the perspective of the camera).
- */
-function screenCoordsToEye(canvas: Dimensions2D, point: Point2D, perspective: PerspectiveOptions): Vector3D {
-  const width = perspective.right - perspective.left;
-  const height = perspective.top - perspective.bottom;
-  const xPct = (point.x / canvas.width);
-  // Note that we need to flip the y-axis.
-  const yPct = ((canvas.height - point.y) / canvas.height);
-
-  const x = perspective.left + xPct * width;
-  const y = perspective.bottom + yPct * height;
-
-  // We need to flip the near value because it's specified in
-  // clip coordinates.
-  const z = -perspective.near;
-
-  return new Vector3D(x, y, z);
-}
-
-/**
- * Convert the given pixel coordinates on the given canvas to
- * points in the world.
- */
-function screenCoordsToWorld(
-  canvas: Dimensions2D,
-  point: Point2D,
-  perspective: PerspectiveOptions,
-  cameraTransform: Matrix3D
-): Vector3D {
-  const pointRelativeToCamera = screenCoordsToEye(canvas, point, perspective);
-  return cameraTransform.transformVector(pointRelativeToCamera);
-}
 
 function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
   return cameraTransform.matrix.transformVector(new Vector3D(0, 0, 0));
