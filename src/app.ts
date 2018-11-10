@@ -5,6 +5,7 @@ import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 import { makeSpaceship, makeGround, makeRay } from "./shapes";
 import { Point2D, screenCoordsToWorld } from "./screen-space";
+import { CheckableValue } from "./checkable-value";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
@@ -39,36 +40,6 @@ class Spaceship {
 
 function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
   return cameraTransform.matrix.transformVector(new Vector3D(0, 0, 0));
-}
-
-/**
- * Convenience class to store a value and detect
- * whether it has changed since the last time
- * we checked.
- */
-class CheckableValue<T> {
-  private lastCheckedValue: T|null = null;
-  private value: T|null = null;
-
-  /** Set the value. */
-  set(value: T) {
-    this.value = value;
-  }
-
-  /**
-   * If the value has changed since the last
-   * time we checked, pass it to the given callback
-   * function. Otherwise, do nothing.
-   */
-  check(cb: (value: T) => void) {
-    if (this.value === this.lastCheckedValue) {
-      return;
-    }
-    this.lastCheckedValue = this.value;
-    if (this.value) {
-      cb(this.value);
-    }
-  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
