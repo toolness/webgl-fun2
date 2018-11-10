@@ -1,7 +1,8 @@
 import { Points3D } from "./points-3d";
 import { GlProgram, getAttribLocation, GlUniformMatrix3D } from "./webgl";
 import { Points3DRenderer } from "./points-3d-renderer";
-import { Matrix3D, Vector3D, PerspectiveOptions } from "./matrix-3d";
+import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
+import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;

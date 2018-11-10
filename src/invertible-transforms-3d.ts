@@ -1,4 +1,5 @@
-import { Matrix3D, Vector3D } from "./matrix-3d";
+import { Matrix3D } from "./matrix-3d";
+import { Vector3D } from "./vector-3d";
 
 type InvertOp = (m: Matrix3D) => Matrix3D;
 

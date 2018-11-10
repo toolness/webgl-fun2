@@ -1,4 +1,4 @@
-import { Vector3D } from "./matrix-3d";
+import { Vector3D } from "./vector-3d";
 
 export class Points3D {
   constructor(private readonly array: Vector3D[]) {
