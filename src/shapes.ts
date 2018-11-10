@@ -11,23 +11,23 @@ export function makeSpaceship(): Points3D {
   return leftHalf.concat(leftHalf.mirrorHorizontally());
 }
 
-export function makeGround(y = -1, pointsPerAxis = 20): Points3D {
+export function makeGround(y = -1, xzStart = -1, size = 2, pointsPerAxis = 20): Points3D {
   const points: number[] = [];
-  let xPart = -1;
-  let zPart = -1;
+  let xPart = xzStart;
+  let zPart = xzStart;
   let partInc = 1 / pointsPerAxis;
 
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
-    points.push(xPart, y, zPart + 2);
-    xPart += 2 * partInc;
+    points.push(xPart, y, zPart + size);
+    xPart += size * partInc;
   }
 
-  xPart = -1;
+  xPart = xzStart;
   for (let i = 0; i <= pointsPerAxis; i++) {
     points.push(xPart, y, zPart);
-    points.push(xPart + 2, y, zPart);
-    zPart += 2 * partInc;
+    points.push(xPart + size, y, zPart);
+    zPart += size * partInc;
   }
 
   return Points3D.fromArray(points);
