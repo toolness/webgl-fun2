@@ -208,35 +208,6 @@ export class Matrix3D {
   }
 
   /**
-   * Assuming the matrix represents a rigid body transformation--that
-   * is, it only consists of rotations and translations--this
-   * returns its inverse.
-   * 
-   * This is documented in Real-Time Rendering, 4th edition,
-   * section 4.1.6 (page 66).
-   */
-  rigidBodyInverse(): Matrix3D {
-    const [
-      [ r11, r12, r13, t1 ],
-      [ r21, r22, r23, t2 ],
-      [ r31, r32, r33, t3 ],
-    ] = this.values;
-    const inverseTranslation = new Matrix3D().translate(-t1, -t2, -t3);
-    const inverseRotation = new Matrix3D([
-      [ r11, r21, r31, 0 ],
-      [ r12, r22, r32, 0 ],
-      [ r13, r23, r33, 0 ],
-      [   0,   0,   0, 1 ]
-    ]);
-    return inverseRotation.multiply(inverseTranslation);
-
-    // Ack, this is what the book prescribes, but it doesn't work
-    // for us because we're actually doing the transform in the
-    // opposite order.
-    // return inverseTranslation.multiply(inverseRotation);
-  }
-
-  /**
    * Return the inverse of the matrix.
    * 
    * If the matrix is non-invertible, an exception will
