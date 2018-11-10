@@ -180,7 +180,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const cameraTransform = new Matrix3D()
       .rotateY(cameraRotation)
       .translate(0, 0, 2.25);
-    const viewTransform = cameraTransform.inverse();
+    const viewTransform = cameraTransform.rigidBodyInverse();
     const projectionTransform = baseProjectionTransform.multiply(viewTransform);
 
     screenClick.check(coords => {
