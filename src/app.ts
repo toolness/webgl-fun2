@@ -7,6 +7,16 @@ import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
 
+type Point2D = {
+  x: number,
+  y: number
+};
+
+type Dimensions2D = {
+  width: number,
+  height: number
+};
+
 function makeSpaceship(): Points3D {
   const leftHalf = Points3D.fromArray([
     -0.5, 0, 0,
@@ -81,15 +91,15 @@ class Spaceship {
  * Convert the given screen coordinates, in pixels, to
  * eye coordinates (from the perspective of the camera).
  */
-function screenCoordsToEye(canvas: HTMLCanvasElement, x: number, y: number, p: PerspectiveOptions): Vector3D {
-  const width = p.right - p.left;
-  const height = p.top - p.bottom;
-  const xPct = (x / canvas.width);
+function screenCoordsToEye(canvas: Dimensions2D, point: Point2D, perspective: PerspectiveOptions): Vector3D {
+  const width = perspective.right - perspective.left;
+  const height = perspective.top - perspective.bottom;
+  const xPct = (point.x / canvas.width);
   // Note that we need to flip the y-axis.
-  const yPct = ((canvas.height - y) / canvas.height);
+  const yPct = ((canvas.height - point.y) / canvas.height);
 
-  x = p.left + xPct * width;
-  y = p.bottom + yPct * height;
+  const x = perspective.left + xPct * width;
+  const y = perspective.bottom + yPct * height;
 
   // We need to flip the near value because it's specified in
   // clip coordinates.
@@ -103,13 +113,12 @@ function screenCoordsToEye(canvas: HTMLCanvasElement, x: number, y: number, p: P
  * points in the world.
  */
 function screenCoordsToWorld(
-  canvas: HTMLCanvasElement,
-  x: number,
-  y: number,
+  canvas: Dimensions2D,
+  point: Point2D,
   perspective: PerspectiveOptions,
   cameraTransform: Matrix3D
 ): Vector3D {
-  const pointRelativeToCamera = screenCoordsToEye(canvas, x, y, perspective);
+  const pointRelativeToCamera = screenCoordsToEye(canvas, point, perspective);
   return cameraTransform.transformVector(pointRelativeToCamera);
 }
 
@@ -147,15 +156,6 @@ class CheckableValue<T> {
   }
 }
 
-const perspective: PerspectiveOptions = {
-  top: 1,
-  bottom: -1,
-  right: 1,
-  left: -1,
-  near: 1,
-  far: 3
-};
-
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -171,10 +171,18 @@ window.addEventListener('DOMContentLoaded', () => {
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const groundRenderer = new Points3DRenderer(program, makeGround());
   let rayRenderer: Points3DRenderer|null = null;
+  const perspective: PerspectiveOptions = {
+    top: 1,
+    bottom: -1,
+    right: 1,
+    left: -1,
+    near: 1,
+    far: 3
+  };
   const baseProjectionTransform = Matrix3D.perspectiveProjection(perspective);
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
-  let screenClick = new CheckableValue<{x: number, y: number}>();
+  let screenClick = new CheckableValue<Point2D>();
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
     spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
@@ -197,8 +205,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const cameraPosition = getCameraPosition(cameraTransform);
       const screenPointInWorld = screenCoordsToWorld(
         canvas,
-        coords.x,
-        coords.y,
+        coords,
         perspective,
         cameraTransform.matrix
       );
