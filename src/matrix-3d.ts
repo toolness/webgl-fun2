@@ -15,7 +15,7 @@ type Matrix3DTuple = [
   [number, number, number, number]
 ];
 
-type PerspectiveOptions = {
+export type PerspectiveOptions = {
   left: number;
   right: number;
   top: number;

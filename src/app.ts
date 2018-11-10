@@ -1,7 +1,7 @@
 import { Points3D } from "./points-3d";
 import { GlProgram, getAttribLocation, GlUniformMatrix3D } from "./webgl";
 import { Points3DRenderer } from "./points-3d-renderer";
-import { Matrix3D, Vector3D } from "./matrix-3d";
+import { Matrix3D, Vector3D, PerspectiveOptions } from "./matrix-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
@@ -78,36 +78,43 @@ class Spaceship {
 };
 
 /**
- * Convert the given pixel coordinates on the given canvas to
- * WebGL/OpenGL normalized device coordinates (NDC).
+ * Convert the given screen coordinates, in pixels, to
+ * eye coordinates (from the perspective of the camera).
  */
-function screenCoordsToNDC(canvas: HTMLCanvasElement, x: number, y: number): Vector3D {
-  return new Vector3D(
-    -1 + (x / canvas.width) * 2,
-    // We need to flip the y-axis.
-    (-1 + (y / canvas.height) * 2) * -1,
-    // The z-coordinate of the near clipping plane is -1 in NDC.
-    -1
-  );
+function screenCoordsToEye(canvas: HTMLCanvasElement, x: number, y: number, p: PerspectiveOptions): Vector3D {
+  const width = p.right - p.left;
+  const height = p.top - p.bottom;
+  const xPct = (x / canvas.width);
+  // Note that we need to flip the y-axis.
+  const yPct = ((canvas.height - y) / canvas.height);
+
+  x = p.left + xPct * width;
+  y = p.bottom + yPct * height;
+
+  // We need to flip the near value because it's specified in
+  // clip coordinates.
+  const z = -perspective.near;
+
+  return new Vector3D(x, y, z);
+}
+
+/**
+ * Convert the given pixel coordinates on the given canvas to
+ * points in the world.
+ */
+function screenCoordsToWorld(
+  canvas: HTMLCanvasElement,
+  x: number,
+  y: number,
+  perspective: PerspectiveOptions,
+  cameraTransform: Matrix3D
+): Vector3D {
+  const pointRelativeToCamera = screenCoordsToEye(canvas, x, y, perspective);
+  return cameraTransform.transformVector(pointRelativeToCamera);
 }
 
 function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
   return cameraTransform.matrix.transformVector(new Vector3D(0, 0, 0));
-}
-
-/**
- * Calculate the vector representing the ray from the
- * camera to the given screen point.
- */
-function getCameraRay(screenPointNDC: Vector3D, cameraPosition: Vector3D, projectionTransform: Matrix3D): Vector3D {
-  const inverseProjectionTransform = projectionTransform.inverse();
-
-  // I'm not actually 100% sure if I'm doing the right thing here
-  // mathematically, but it makes sense intuitively and seems to work
-  // in practice.
-  const screenPointInWorld = inverseProjectionTransform.transformVector(screenPointNDC).perspectiveDivide();
-
-  return screenPointInWorld.minus(cameraPosition);
 }
 
 /**
@@ -140,6 +147,15 @@ class CheckableValue<T> {
   }
 }
 
+const perspective: PerspectiveOptions = {
+  top: 1,
+  bottom: -1,
+  right: 1,
+  left: -1,
+  near: 1,
+  far: 3
+};
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
 
@@ -155,14 +171,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const groundRenderer = new Points3DRenderer(program, makeGround());
   let rayRenderer: Points3DRenderer|null = null;
-  const baseProjectionTransform = Matrix3D.perspectiveProjection({
-    top: 1,
-    bottom: -1,
-    right: 1,
-    left: -1,
-    near: 1,
-    far: 3
-  });
+  const baseProjectionTransform = Matrix3D.perspectiveProjection(perspective);
   const spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
   let screenClick = new CheckableValue<{x: number, y: number}>();
@@ -186,11 +195,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     screenClick.check(coords => {
       const cameraPosition = getCameraPosition(cameraTransform);
-      const ray = getCameraRay(
-        screenCoordsToNDC(canvas, coords.x, coords.y),
-        cameraPosition,
-        projectionTransform,
+      const screenPointInWorld = screenCoordsToWorld(
+        canvas,
+        coords.x,
+        coords.y,
+        perspective,
+        cameraTransform.matrix
       );
+      const ray = screenPointInWorld.minus(cameraPosition);
+
       rayRenderer = new Points3DRenderer(program, makeRay(cameraPosition, ray));
     });
 
