@@ -66,6 +66,18 @@ export class Vector3D {
     const len = Math.sqrt(x * x + y * y + z * z);
     return new Vector3D(x / len, y / len, z / len, w);
   }
+
+  /**
+   * A helper to convert either a vector or a sequence of coordinates
+   * into a vector.
+   */
+  static fromVectorOrCoords(x: Vector3D|number, y?: number, z?: number): Vector3D {
+    z = x instanceof Vector3D ? x.z : z || 0;
+    y = x instanceof Vector3D ? x.y : y || 0;
+    x = x instanceof Vector3D ? x.x : x;
+
+    return new Vector3D(x, y, z);
+  }
 }
 
 /**
@@ -112,15 +124,13 @@ export class Matrix3D {
   translate(x: number, y: number, z: number): Matrix3D;
 
   translate(x: Vector3D|number, y?: number, z?: number): Matrix3D {
-    z = x instanceof Vector3D ? x.z : z || 0;
-    y = x instanceof Vector3D ? x.y : y || 0;
-    x = x instanceof Vector3D ? x.x : x;
+    const v = Vector3D.fromVectorOrCoords(x, y, z);
 
     return this.multiply(new Matrix3D([
-      [1, 0, 0, x],
-      [0, 1, 0, y],
-      [0, 0, 1, z],
-      [0, 0, 0, 1]
+      [1, 0, 0, v.x],
+      [0, 1, 0, v.y],
+      [0, 0, 1, v.z],
+      [0, 0, 0,   1]
     ]));
   }
 

@@ -2,6 +2,7 @@ import { Points3D } from "./points-3d";
 import { GlProgram, getAttribLocation, GlUniformMatrix3D } from "./webgl";
 import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D, Vector3D } from "./matrix-3d";
+import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
@@ -90,8 +91,8 @@ function screenCoordsToNDC(canvas: HTMLCanvasElement, x: number, y: number): Vec
   );
 }
 
-function getCameraPosition(cameraTransform: Matrix3D): Vector3D {
-  return cameraTransform.transformVector(new Vector3D(0, 0, 0));
+function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
+  return cameraTransform.matrix.transformVector(new Vector3D(0, 0, 0));
 }
 
 /**
@@ -177,10 +178,10 @@ window.addEventListener('DOMContentLoaded', () => {
   let cameraRotation = 0;
 
   const render = () => {
-    const cameraTransform = new Matrix3D()
+    const cameraTransform = new InvertibleTransforms3D()
       .rotateY(cameraRotation)
       .translate(0, 0, 2.25);
-    const viewTransform = cameraTransform.rigidBodyInverse();
+    const viewTransform = cameraTransform.inverse();
     const projectionTransform = baseProjectionTransform.multiply(viewTransform);
 
     screenClick.check(coords => {
