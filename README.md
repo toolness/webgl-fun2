@@ -35,3 +35,4 @@ any of this:
 * Grant Sanderson's [Essence of Linear Algebra](http://www.3blue1brown.com/essence-of-linear-algebra-page/) videos
 * Greggman's [WebGL Fundamentals](https://webglfundamentals.org/)
 * Song Ho Ahn's [OpenGL tutorials and notes](http://www.songho.ca/opengl/index.html)
+* [Real-Time Rendering](http://www.realtimerendering.com/) by Tomas Akenine-Möller, Eric Haines, Naty Hoffman, Angelo Pesce, Michał Iwanicki, and Sébastien Hillaire, Fourth edition

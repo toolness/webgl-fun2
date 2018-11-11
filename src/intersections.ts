@@ -5,6 +5,9 @@ import { Ray3D } from "./ray-3d";
  * Tests for ray/sphere intersection, returning null if the
  * ray never intersects with the sphere, or the vector
  * representing the closest point of intersection.
+ * 
+ * Derivation for this can be found in Real-Time Rendering,
+ * 4th edition, 22.6.1 (page 956).
  */
 export function getRaySphereIntersection(ray: Ray3D, center: Vector3D, radius: number): null | Vector3D {
   const originMinusCenter = ray.origin.minus(center);
