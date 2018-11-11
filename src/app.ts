@@ -91,15 +91,10 @@ function buildUI() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const canvas = document.createElement('canvas');
+  const canvas = getElement('canvas', '#canvas');
   const ui = buildUI();
-
-  document.body.appendChild(canvas);
-  canvas.width = 800;
-  canvas.height = 800;
-  canvas.style.border = '1px solid black';
-
   const gl = canvas.getContext('webgl');
+
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
   const program = new SimpleGlProgram(gl);
