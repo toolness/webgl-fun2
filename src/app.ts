@@ -33,7 +33,7 @@ class Spaceship {
   shipTheta = Math.random();
   shipThetaVelocity = Math.random() * 0.05;
   transform: Matrix3D;
-  readonly intersectionRadiusScale = 0.5;
+  readonly colliderScale = 0.5;
 
   constructor(readonly z: number) {
     this.transform = this.recomputeTransform();
@@ -49,12 +49,12 @@ class Spaceship {
     return this.transform = transform;
   }
 
-  get intersectionRadius(): number {
-    return this.scale * this.intersectionRadiusScale;
+  get colliderRadius(): number {
+    return this.scale * this.colliderScale;
   }
 
-  getIntersectionSphereTransform(): Matrix3D {
-    return this.transform.scale(this.intersectionRadiusScale);
+  getColliderTransform(): Matrix3D {
+    return this.transform.scale(this.colliderScale);
   }
 
   center(): Vector3D {
@@ -62,7 +62,7 @@ class Spaceship {
   }
 
   doesRayIntersect(ray: Ray3D): boolean {
-    return getRaySphereIntersection(ray, this.center(), this.intersectionRadius) !== null;
+    return getRaySphereIntersection(ray, this.center(), this.colliderRadius) !== null;
   }
 
   update() {
@@ -88,6 +88,19 @@ function buildUI() {
     showColliders,
     pause
   };
+}
+
+function drawCollider(baseTransform: Matrix3D, uniform: GlUniformMatrix3D, renderer: Points3DRenderer) {
+  const transforms = [
+    baseTransform,
+    baseTransform.rotateX(Math.PI / 2),
+    baseTransform.rotateY(Math.PI / 2)
+  ];
+
+  transforms.forEach(transform => {
+    uniform.set(transform);
+    renderer.draw(WebGLRenderingContext.LINE_LOOP);
+  });
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -177,15 +190,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (ui.showColliders.checked) {
       circleRenderer.setupForDrawing();
       spaceships.forEach(spaceship => {
-        const transform = projectionTransform.multiply(
-          spaceship.getIntersectionSphereTransform()
-        );
-        program.transform.set(transform);
-        circleRenderer.draw(gl.LINE_LOOP);
-        program.transform.set(transform.rotateX(Math.PI / 2));
-        circleRenderer.draw(gl.LINE_LOOP);
-        program.transform.set(transform.rotateY(Math.PI / 2));
-        circleRenderer.draw(gl.LINE_LOOP);
+        const transform = projectionTransform.multiply(spaceship.getColliderTransform());
+        drawCollider(transform, program.transform, circleRenderer);
       });
     }
 
