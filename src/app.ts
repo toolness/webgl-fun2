@@ -78,12 +78,15 @@ function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
 
 function buildUI() {
   const showColliders = getElement('input', '#show-colliders');
+  const pause = getElement('input', '#pause');
   const keyMap = new KeyboardMap();
 
   keyMap.setCheckboxToggler('c', showColliders);
+  keyMap.setCheckboxToggler('p', pause);
 
   return {
-    showColliders
+    showColliders,
+    pause
   };
 }
 
@@ -121,7 +124,10 @@ window.addEventListener('DOMContentLoaded', () => {
     spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
   }
 
-  canvas.onclick = (e) => { screenClick.set({x: e.offsetX, y: e.offsetY}); };
+  canvas.onclick = (e) => {
+    if (ui.pause.checked) return;
+    screenClick.set({x: e.offsetX, y: e.offsetY});
+  };
 
   console.log("Initialization successful!");
 
@@ -147,7 +153,9 @@ window.addEventListener('DOMContentLoaded', () => {
       rayRenderer = new Points3DRenderer(program, makeRayPoints(ray));
     });
 
-    cameraRotation += 0.001;
+    if (!ui.pause.checked) {
+      cameraRotation += 0.001;
+    }
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.enable(gl.DEPTH_TEST);
@@ -166,7 +174,9 @@ window.addEventListener('DOMContentLoaded', () => {
     spaceships.forEach(spaceship => {
       program.transform.set(projectionTransform.multiply(spaceship.transform));
       spaceshipRenderer.draw();
-      spaceship.update();
+      if (!ui.pause.checked) {
+        spaceship.update();
+      }
     });
 
     if (ui.showColliders.checked) {
