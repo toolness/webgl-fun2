@@ -57,7 +57,7 @@ class Spaceship {
   }
 
   center(): Vector3D {
-    return this.transform.transformVector(new Vector3D(0, 0, 0));
+    return this.transform.transformVector(new Vector3D());
   }
 
   doesRayIntersect(ray: Ray3D): boolean {
@@ -72,7 +72,7 @@ class Spaceship {
 };
 
 function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
-  return cameraTransform.matrix.transformVector(new Vector3D(0, 0, 0));
+  return cameraTransform.matrix.transformVector(new Vector3D());
 }
 
 window.addEventListener('DOMContentLoaded', () => {

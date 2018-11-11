@@ -4,8 +4,12 @@
  * system.
  */
 export class Vector3D {
-  constructor(readonly x: number, readonly y: number, readonly z: number, readonly w: number = 1.0) {
-  }
+  constructor(
+    readonly x: number = 0,
+    readonly y: number = 0,
+    readonly z: number = 0,
+    readonly w: number = 1.0
+  ) {}
 
   perspectiveDivide(): Vector3D {
     const { x, y, z, w } = this;
