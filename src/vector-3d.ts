@@ -27,6 +27,12 @@ export class Vector3D {
     return new Vector3D(x * n, y * n, z * n, w);
   }
 
+  dot(v: Vector3D): number {
+    const { x, y, z, w } = this;
+
+    return x * v.x + y * v.y + z * v.z;
+  }
+
   normalize(): Vector3D {
     const { x, y, z, w } = this;
     const len = Math.sqrt(x * x + y * y + z * z);

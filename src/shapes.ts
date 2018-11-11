@@ -1,5 +1,6 @@
 import { Points3D } from "./points-3d";
 import { Vector3D } from "./vector-3d";
+import { Ray3D } from "./ray-3d";
 
 export function makeSpaceship(): Points3D {
   const leftHalf = Points3D.fromArray([
@@ -33,9 +34,9 @@ export function makeGround(y = -1, xzStart = -1, size = 2, pointsPerAxis = 20): 
   return Points3D.fromArray(points);
 }
 
-export function makeRay(start: Vector3D, ray: Vector3D, segments = 10, length = 5): Points3D {
-  let point = start;
-  const increment = ray.normalize().times(length / segments);
+export function makeRayPoints(ray: Ray3D, segments = 10, length = 5): Points3D {
+  let point = ray.origin;
+  const increment = ray.direction.times(length / segments);
   const points: number[] = [];
 
   for (let i = 0; i < segments; i++) {

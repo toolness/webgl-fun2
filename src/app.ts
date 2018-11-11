@@ -3,9 +3,11 @@ import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
-import { makeSpaceship, makeGround, makeRay } from "./shapes";
+import { makeSpaceship, makeGround, makeRayPoints } from "./shapes";
 import { Point2D, screenCoordsToWorld } from "./screen-space";
 import { CheckableValue } from "./checkable-value";
+import { Ray3D } from "./ray-3d";
+import { getRaySphereIntersection } from "./intersections";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
@@ -95,9 +97,11 @@ window.addEventListener('DOMContentLoaded', () => {
         perspective,
         cameraTransform.matrix
       );
-      const ray = screenPointInWorld.minus(cameraPosition);
+      const ray = Ray3D.fromTo(cameraPosition, screenPointInWorld);
 
-      rayRenderer = new Points3DRenderer(program, makeRay(cameraPosition, ray));
+      console.log(getRaySphereIntersection(ray, new Vector3D(0, 0, 0), 0.5));
+
+      rayRenderer = new Points3DRenderer(program, makeRayPoints(ray));
     });
 
     cameraRotation += 0.001;
