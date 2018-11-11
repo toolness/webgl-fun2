@@ -3,11 +3,12 @@ import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
-import { makeSpaceship, makeGround, makeRayPoints } from "./shapes";
+import { makeSpaceship, makeGround, makeRayPoints, makeCircle } from "./shapes";
 import { Point2D, screenCoordsToWorld } from "./screen-space";
 import { CheckableValue } from "./checkable-value";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
+import { getElement } from "./get-element";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
@@ -31,6 +32,7 @@ class Spaceship {
   shipTheta = Math.random();
   shipThetaVelocity = Math.random() * 0.05;
   transform: Matrix3D;
+  readonly intersectionRadiusScale = 0.5;
 
   constructor(readonly z: number) {
     this.transform = this.recomputeTransform();
@@ -47,7 +49,11 @@ class Spaceship {
   }
 
   get intersectionRadius(): number {
-    return this.scale * 0.5;
+    return this.scale * this.intersectionRadiusScale;
+  }
+
+  getIntersectionSphereTransform(): Matrix3D {
+    return this.transform.scale(this.intersectionRadiusScale);
   }
 
   center(): Vector3D {
@@ -80,9 +86,11 @@ window.addEventListener('DOMContentLoaded', () => {
   const gl = canvas.getContext('webgl');
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
+  const showCollidersCheckbox = getElement('input', '#show-colliders');
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const groundRenderer = new Points3DRenderer(program, makeGround());
+  const circleRenderer = new Points3DRenderer(program, makeCircle());
   let rayRenderer: Points3DRenderer|null = null;
   const perspective: PerspectiveOptions = {
     top: 1,
@@ -148,6 +156,22 @@ window.addEventListener('DOMContentLoaded', () => {
       spaceshipRenderer.draw();
       spaceship.update();
     });
+
+    if (showCollidersCheckbox.checked) {
+      circleRenderer.setupForDrawing();
+      spaceships.forEach(spaceship => {
+        const transform = projectionTransform.multiply(
+          spaceship.getIntersectionSphereTransform()
+        );
+        program.transform.set(transform);
+        circleRenderer.draw(gl.LINE_LOOP);
+        program.transform.set(transform.rotateX(Math.PI / 2));
+        circleRenderer.draw(gl.LINE_LOOP);
+        program.transform.set(transform.rotateY(Math.PI / 2));
+        circleRenderer.draw(gl.LINE_LOOP);
+      });
+    }
+
     window.requestAnimationFrame(render);
   };
 

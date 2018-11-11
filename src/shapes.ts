@@ -1,6 +1,7 @@
 import { Points3D } from "./points-3d";
 import { Vector3D } from "./vector-3d";
 import { Ray3D } from "./ray-3d";
+import { Matrix3D } from "./matrix-3d";
 
 export function makeSpaceship(): Points3D {
   const leftHalf = Points3D.fromArray([
@@ -43,6 +44,19 @@ export function makeRayPoints(ray: Ray3D, segments = 10, length = 5): Points3D {
     points.push(point.x, point.y, point.z);
     point = point.plus(increment);
     points.push(point.x, point.y, point.z);
+  }
+
+  return Points3D.fromArray(points);
+}
+
+export function makeCircle(segments = 20): Points3D {
+  const points: number[] = [];
+  const start = new Vector3D(1, 0, 0);
+
+  for (let i = 0; i < segments; i++) {
+    const rotation = new Matrix3D().rotateZ(2 * Math.PI * (i / segments));
+    const p = rotation.transformVector(start);
+    points.push(p.x, p.y, p.z);
   }
 
   return Points3D.fromArray(points);
