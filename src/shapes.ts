@@ -4,13 +4,15 @@ import { Ray3D } from "./ray-3d";
 import { Matrix3D } from "./matrix-3d";
 
 export function makeSpaceship(): Points3D {
-  const leftHalf = Points3D.fromArray([
+  const translate = new Matrix3D().translate(0, -0.25, 0);
+  const mirror = new Matrix3D().scale(-1, 1, 1);
+  const leftHalf = translate.transformPoints(Points3D.fromArray([
     -0.5, 0, 0,
     0, 0.75, 0,
     0, 0.15, 0
-  ]);
+  ]));
 
-  return leftHalf.concat(leftHalf.mirrorHorizontally());
+  return leftHalf.concat(mirror.transformPoints(leftHalf));
 }
 
 export function makeGround(y = -1, xzStart = -1, size = 2, pointsPerAxis = 20): Points3D {

@@ -1,4 +1,5 @@
 import { Vector3D } from "./vector-3d";
+import { Points3D } from "./points-3d";
 
 type Column = 1|2|3|4;
 type Row = 1|2|3|4;
@@ -72,11 +73,17 @@ export class Matrix3D {
     ]));
   }
 
-  scale(v: number) {
+  scale(x: number, y?: number, z?: number): Matrix3D {
+    if (y === undefined) {
+      y = x;
+    }
+    if (z === undefined) {
+      z = y;
+    }
     return this.multiply(new Matrix3D([
-      [v, 0, 0, 0],
-      [0, v, 0, 0],
-      [0, 0, v, 0],
+      [x, 0, 0, 0],
+      [0, y, 0, 0],
+      [0, 0, z, 0],
       [0, 0, 0, 1]
     ]));
   }
@@ -194,6 +201,10 @@ export class Matrix3D {
       [0, 0, -(far + near) / depth, -2 * far * near / depth],
       [0, 0, -1, 0]
     ]);
+  }
+
+  transformPoints(points: Points3D): Points3D {
+    return points.map(v => this.transformVector(v));
   }
 
   transformVector(v: Vector3D): Vector3D {

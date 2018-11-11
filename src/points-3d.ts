@@ -24,10 +24,8 @@ export class Points3D {
     return new Points3D(combined);
   }
 
-  mirrorHorizontally(): Points3D {
-    return new Points3D(this.array.map(point => {
-      return new Vector3D(-point.x, point.y, point.z);
-    }));
+  map(fn: (v: Vector3D) => Vector3D) {
+    return new Points3D(this.array.map(fn));
   }
 
   get length(): number {
