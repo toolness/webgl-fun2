@@ -9,6 +9,7 @@ import { CheckableValue } from "./checkable-value";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
+import { KeyboardMap } from "./keyboard-map";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
@@ -75,8 +76,20 @@ function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
   return cameraTransform.matrix.transformVector(new Vector3D());
 }
 
+function buildUI() {
+  const showColliders = getElement('input', '#show-colliders');
+  const keyMap = new KeyboardMap();
+
+  keyMap.setCheckboxToggler('c', showColliders);
+
+  return {
+    showColliders
+  };
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.createElement('canvas');
+  const ui = buildUI();
 
   document.body.appendChild(canvas);
   canvas.width = 800;
@@ -86,7 +99,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const gl = canvas.getContext('webgl');
   if (!gl) throw new Error("webgl is not supported on this browser!");
 
-  const showCollidersCheckbox = getElement('input', '#show-colliders');
   const program = new SimpleGlProgram(gl);
   const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
   const groundRenderer = new Points3DRenderer(program, makeGround());
@@ -157,7 +169,7 @@ window.addEventListener('DOMContentLoaded', () => {
       spaceship.update();
     });
 
-    if (showCollidersCheckbox.checked) {
+    if (ui.showColliders.checked) {
       circleRenderer.setupForDrawing();
       spaceships.forEach(spaceship => {
         const transform = projectionTransform.multiply(
