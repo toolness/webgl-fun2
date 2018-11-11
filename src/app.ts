@@ -30,13 +30,38 @@ class Spaceship {
   scale = 0.5;
   shipTheta = Math.random();
   shipThetaVelocity = Math.random() * 0.05;
+  transform: Matrix3D;
 
   constructor(readonly z: number) {
+    this.transform = this.recomputeTransform();
+  }
+
+  recomputeTransform(): Matrix3D {
+    const transform = new Matrix3D()
+      .rotateZ(this.orbitTheta)
+      .translate(this.distanceFromCenter, 0, this.z)
+      .scale(this.scale)
+      .rotateY(this.shipTheta);
+
+    return this.transform = transform;
+  }
+
+  get intersectionRadius(): number {
+    return this.scale * 0.5;
+  }
+
+  center(): Vector3D {
+    return this.transform.transformVector(new Vector3D(0, 0, 0));
+  }
+
+  doesRayIntersect(ray: Ray3D): boolean {
+    return getRaySphereIntersection(ray, this.center(), this.intersectionRadius) !== null;
   }
 
   update() {
     this.orbitTheta += this.orbitThetaVelocity;
     this.shipTheta += this.shipThetaVelocity;
+    this.recomputeTransform();
   }
 };
 
@@ -68,7 +93,7 @@ window.addEventListener('DOMContentLoaded', () => {
     far: 3
   };
   const baseProjectionTransform = Matrix3D.perspectiveProjection(perspective);
-  const spaceships: Spaceship[] = [];
+  let spaceships: Spaceship[] = [];
   const NUM_SPACESHIPS = 30;
   let screenClick = new CheckableValue<Point2D>();
 
@@ -98,9 +123,7 @@ window.addEventListener('DOMContentLoaded', () => {
         cameraTransform.matrix
       );
       const ray = Ray3D.fromTo(cameraPosition, screenPointInWorld);
-
-      console.log(getRaySphereIntersection(ray, new Vector3D(0, 0, 0), 0.5));
-
+      spaceships = spaceships.filter(s => !s.doesRayIntersect(ray));
       rayRenderer = new Points3DRenderer(program, makeRayPoints(ray));
     });
 
@@ -121,12 +144,7 @@ window.addEventListener('DOMContentLoaded', () => {
     groundRenderer.draw(gl.LINES);
     spaceshipRenderer.setupForDrawing();
     spaceships.forEach(spaceship => {
-      const baseTransform = new Matrix3D()
-        .rotateZ(spaceship.orbitTheta)
-        .translate(spaceship.distanceFromCenter, 0, spaceship.z)
-        .scale(spaceship.scale)
-        .rotateY(spaceship.shipTheta);
-      program.transform.set(projectionTransform.multiply(baseTransform));
+      program.transform.set(projectionTransform.multiply(spaceship.transform));
       spaceshipRenderer.draw();
       spaceship.update();
     });
