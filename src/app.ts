@@ -149,13 +149,25 @@ class CameraRay {
 }
 
 type SceneState = {
+  perspective: PerspectiveOptions;
   spaceships: Spaceship[];
   cameraRotation: number;
   ray?: CameraRay;
 };
 
 class Scene {
+  readonly baseProjectionTransform: Matrix3D;
+  readonly cameraTransform: InvertibleTransforms3D;
+  readonly viewTransform: Matrix3D;
+  readonly projectionTransform: Matrix3D;
+
   constructor(readonly state: Readonly<SceneState>) {
+    this.baseProjectionTransform = Matrix3D.perspectiveProjection(state.perspective);
+    this.cameraTransform = new InvertibleTransforms3D()
+      .rotateY(state.cameraRotation)
+      .translate(0, 0, 2.25);
+    this.viewTransform = this.cameraTransform.inverse();
+    this.projectionTransform = this.baseProjectionTransform.multiply(this.viewTransform);
   }
 
   update(): Scene {
@@ -175,59 +187,50 @@ class Scene {
       ray
     });
   }
-
-  static createRandom(spaceshipCount: number = 30) {
-    const spaceships: Spaceship[] = [];
-
-    for (let i = 0; i < spaceshipCount; i++) {
-      spaceships.push(Spaceship.createRandom({
-        z: -1 + ((i / spaceshipCount) * 2)
-      }));
-    }
-
-    return new Scene({
-      spaceships,
-      cameraRotation: 0,
-    });
-  }
 };
 
-window.addEventListener('DOMContentLoaded', () => {
-  const canvas = getElement('canvas', '#canvas');
-  const ui = buildUI();
-  const gl = canvas.getContext('webgl');
+function createRandomSpaceships(amount = 30) {
+  const spaceships: Spaceship[] = [];
 
-  if (!gl) throw new Error("webgl is not supported on this browser!");
+  for (let i = 0; i < amount; i++) {
+    spaceships.push(Spaceship.createRandom({
+      z: -1 + ((i / amount) * 2)
+    }));
+  }
 
-  const program = new SimpleGlProgram(gl);
-  const spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
-  const groundRenderer = new Points3DRenderer(program, makeGround());
-  const circleRenderer = new Points3DRenderer(program, makeCircle());
-  const perspective: PerspectiveOptions = {
-    top: 1,
-    bottom: -1,
-    right: 1,
-    left: -1,
-    near: 1,
-    far: 3
-  };
-  const baseProjectionTransform = Matrix3D.perspectiveProjection(perspective);
-  let scene = Scene.createRandom();
-  let screenClick = new CheckableValue<Point2D>();
+  return spaceships;
+}
 
-  canvas.onclick = (e) => {
-    if (ui.pause.checked) return;
-    screenClick.set({x: e.offsetX, y: e.offsetY});
-  };
+class App {
+  readonly ui = buildUI();
+  readonly gl: WebGLRenderingContext;
+  readonly program: SimpleGlProgram;
+  readonly spaceshipRenderer: Points3DRenderer;
+  readonly groundRenderer: Points3DRenderer;
+  readonly circleRenderer: Points3DRenderer;
+  readonly screenClick: CheckableValue<Point2D> = new CheckableValue();
 
-  console.log("Initialization successful!");
+  constructor(readonly canvas: HTMLCanvasElement) {
+    const gl = canvas.getContext('webgl');
 
-  const render = () => {
-    const cameraTransform = new InvertibleTransforms3D()
-      .rotateY(scene.state.cameraRotation)
-      .translate(0, 0, 2.25);
-    const viewTransform = cameraTransform.inverse();
-    const projectionTransform = baseProjectionTransform.multiply(viewTransform);
+    if (!gl) throw new Error("webgl is not supported on this browser!");
+
+    this.gl = gl;
+
+    const program = new SimpleGlProgram(gl);
+    this.program = program;
+    this.spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
+    this.groundRenderer = new Points3DRenderer(program, makeGround());
+    this.circleRenderer = new Points3DRenderer(program, makeCircle());
+
+    canvas.addEventListener('click', (e) => {
+      if (this.ui.pause.checked) return;
+      this.screenClick.set({x: e.offsetX, y: e.offsetY});
+    });
+  }
+
+  render(scene: Scene) {
+    const { gl, program } = this;
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
     gl.enable(gl.DEPTH_TEST);
@@ -237,39 +240,80 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (scene.state.ray) {
       scene.state.ray.renderer.setupForDrawing();
-      program.transform.set(projectionTransform);
+      program.transform.set(scene.projectionTransform);
       scene.state.ray.renderer.draw(gl.LINES);
     }
 
-    groundRenderer.setupForDrawing();
-    program.transform.set(projectionTransform);
-    groundRenderer.draw(gl.LINES);
-    spaceshipRenderer.setupForDrawing();
+    this.groundRenderer.setupForDrawing();
+    program.transform.set(scene.projectionTransform);
+    this.groundRenderer.draw(gl.LINES);
+    this.spaceshipRenderer.setupForDrawing();
     scene.state.spaceships.forEach(spaceship => {
-      program.transform.set(projectionTransform.multiply(spaceship.transform));
-      spaceshipRenderer.draw();
+      program.transform.set(scene.projectionTransform.multiply(spaceship.transform));
+      this.spaceshipRenderer.draw();
     });
 
-    if (ui.showColliders.checked) {
-      circleRenderer.setupForDrawing();
+    if (this.ui.showColliders.checked) {
+      this.circleRenderer.setupForDrawing();
       scene.state.spaceships.forEach(spaceship => {
-        const transform = projectionTransform.multiply(spaceship.getColliderTransform());
-        drawCollider(transform, program.transform, circleRenderer);
+        const transform = scene.projectionTransform.multiply(spaceship.getColliderTransform());
+        drawCollider(transform, program.transform, this.circleRenderer);
       });
     }
+  }
 
-    if (!ui.pause.checked) {
-      screenClick.check(coords => {
-        scene = scene.shootRay(new CameraRay({
-          program, cameraTransform, canvas, coords, perspective
+  getNextScene(scene: Scene): Scene {
+    let nextScene = scene;
+
+    if (!this.ui.pause.checked) {
+      this.screenClick.check(coords => {
+        nextScene = nextScene.shootRay(new CameraRay({
+          coords,
+          program: this.program,
+          canvas: this.canvas,
+          cameraTransform: scene.cameraTransform,
+          perspective: scene.state.perspective
         }));
       });
 
-      scene = scene.update();
+      nextScene = nextScene.update();
     }
 
-    window.requestAnimationFrame(render);
-  };
+    return nextScene;
+  }
 
-  render();
+  createInitialScene(): Scene {
+    return new Scene({
+      perspective: {
+        top: 1,
+        bottom: -1,
+        right: 1,
+        left: -1,
+        near: 1,
+        far: 3  
+      },
+      spaceships: createRandomSpaceships(),
+      cameraRotation: 0
+    });
+  }
+
+  run() {
+    let scene = this.createInitialScene();
+
+    const updateFrame = () => {
+      this.render(scene);
+
+      scene = this.getNextScene(scene);
+
+      window.requestAnimationFrame(updateFrame);
+    }
+
+    updateFrame();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const app = new App(getElement('canvas', '#canvas'));
+
+  app.run();
 });
