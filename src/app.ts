@@ -25,32 +25,48 @@ class SimpleGlProgram extends GlProgram {
   }
 }
 
-class Spaceship {
-  orbitTheta = Math.random();
-  orbitThetaVelocity = Math.random() * 0.01;
-  distanceFromCenter = Math.random();
-  scale = 0.5;
-  shipTheta = Math.random();
-  shipThetaVelocity = Math.random() * 0.05;
-  transform: Matrix3D;
-  readonly colliderScale = 0.5;
+type SpaceshipState = {
+  orbitTheta: number;
+  orbitThetaVelocity: number;
+  distanceFromCenter: number;
+  scale: number;
+  shipTheta: number;
+  shipThetaVelocity: number;
+  z: number;
+};
 
-  constructor(readonly z: number) {
-    this.transform = this.recomputeTransform();
+class Spaceship {
+  readonly state: Readonly<SpaceshipState>;
+  readonly transform: Readonly<Matrix3D>;
+  private readonly colliderScale = 0.5;
+
+  constructor(state: SpaceshipState) {
+    this.state = state;
+
+    const transform = new Matrix3D()
+      .rotateZ(state.orbitTheta)
+      .translate(state.distanceFromCenter, 0, state.z)
+      .scale(state.scale)
+      .rotateY(state.shipTheta);
+
+    this.transform = transform;
   }
 
-  recomputeTransform(): Matrix3D {
-    const transform = new Matrix3D()
-      .rotateZ(this.orbitTheta)
-      .translate(this.distanceFromCenter, 0, this.z)
-      .scale(this.scale)
-      .rotateY(this.shipTheta);
-
-    return this.transform = transform;
+  static createRandom(props: Partial<SpaceshipState>) {
+    return new Spaceship({
+      orbitTheta: Math.random(),
+      orbitThetaVelocity: Math.random() * 0.01,
+      distanceFromCenter: Math.random(),
+      scale: 0.5,
+      shipTheta: Math.random(),
+      shipThetaVelocity: Math.random() * 0.05,
+      z: Math.random(),
+      ...props
+    });
   }
 
   get colliderRadius(): number {
-    return this.scale * this.colliderScale;
+    return this.state.scale * this.colliderScale;
   }
 
   getColliderTransform(): Matrix3D {
@@ -65,10 +81,13 @@ class Spaceship {
     return getRaySphereIntersection(ray, this.center(), this.colliderRadius) !== null;
   }
 
-  update() {
-    this.orbitTheta += this.orbitThetaVelocity;
-    this.shipTheta += this.shipThetaVelocity;
-    this.recomputeTransform();
+  update(): Spaceship {
+    const { state } = this;
+    return new Spaceship({
+      ...state,
+      orbitTheta: state.orbitTheta + state.orbitThetaVelocity,
+      shipTheta: state.shipTheta + state.shipThetaVelocity,
+    });
   }
 };
 
@@ -129,7 +148,9 @@ window.addEventListener('DOMContentLoaded', () => {
   let screenClick = new CheckableValue<Point2D>();
 
   for (let i = 0; i < NUM_SPACESHIPS; i++) {
-    spaceships.push(new Spaceship(-1 + ((i / NUM_SPACESHIPS) * 2)));
+    spaceships.push(Spaceship.createRandom({
+      z: -1 + ((i / NUM_SPACESHIPS) * 2)
+    }));
   }
 
   canvas.onclick = (e) => {
@@ -182,9 +203,6 @@ window.addEventListener('DOMContentLoaded', () => {
     spaceships.forEach(spaceship => {
       program.transform.set(projectionTransform.multiply(spaceship.transform));
       spaceshipRenderer.draw();
-      if (!ui.pause.checked) {
-        spaceship.update();
-      }
     });
 
     if (ui.showColliders.checked) {
@@ -193,6 +211,10 @@ window.addEventListener('DOMContentLoaded', () => {
         const transform = projectionTransform.multiply(spaceship.getColliderTransform());
         drawCollider(transform, program.transform, circleRenderer);
       });
+    }
+
+    if (!ui.pause.checked) {
+      spaceships = spaceships.map(s => s.update());
     }
 
     window.requestAnimationFrame(render);
