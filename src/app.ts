@@ -92,10 +92,6 @@ class Spaceship {
   }
 };
 
-function getCameraPosition(cameraTransform: InvertibleTransforms3D): Vector3D {
-  return cameraTransform.matrix.transformVector(new Vector3D());
-}
-
 function buildUI() {
   const showColliders = getElement('input', '#show-colliders');
   const pause = getElement('input', '#pause');
@@ -135,7 +131,7 @@ class CameraRay {
     coords: Point2D,
     perspective: PerspectiveOptions,
   }) {
-    const cameraPosition = getCameraPosition(options.cameraTransform);
+    const cameraPosition = options.cameraTransform.matrix.transformVector(new Vector3D());
     const screenPointInWorld = screenCoordsToWorld(
       options.canvas,
       options.coords,
