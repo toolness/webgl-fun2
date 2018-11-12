@@ -127,16 +127,19 @@ function buildUI() {
   const showColliders = getElement('input', '#show-colliders');
   const pause = getElement('input', '#pause');
   const showZBuffer = getElement('input', '#show-z-buffer');
+  const enableLighting = getElement('input', '#enable-lighting');
   const keyMap = new KeyboardMap();
 
   keyMap.setCheckboxToggler('c', showColliders);
   keyMap.setCheckboxToggler('p', pause);
   keyMap.setCheckboxToggler('z', showZBuffer);
+  keyMap.setCheckboxToggler('l', enableLighting);
 
   return {
     showColliders,
     pause,
-    showZBuffer
+    showZBuffer,
+    enableLighting
   };
 }
 
@@ -309,7 +312,7 @@ class App {
     this.groundRenderer.draw(gl.LINES);
 
     this.spaceshipRenderer.setupForDrawing();
-    program.shade.set(true);
+    program.shade.set(this.ui.enableLighting.checked);
     program.normal.set(Spaceship.normal);
     scene.state.spaceships.forEach(spaceship => {
       program.color.set(spaceship.state.color);
