@@ -16,14 +16,18 @@ const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
 class SimpleGlProgram extends GlProgram {
-  readonly transform: GlUniformMatrix3D;
+  readonly projectionTransform: GlUniformMatrix3D;
+  readonly viewTransform: GlUniformMatrix3D;
+  readonly modelTransform: GlUniformMatrix3D;
   readonly showZBuffer: GlUniformBoolean;
   readonly color: GlUniformVector3D;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, zBufferFragmentShaderSrc);
-    this.transform = new GlUniformMatrix3D(this, 'u_transform');
+    this.projectionTransform = new GlUniformMatrix3D(this, 'u_projection_transform');
+    this.viewTransform = new GlUniformMatrix3D(this, 'u_view_transform');
+    this.modelTransform = new GlUniformMatrix3D(this, 'u_model_transform');
     this.color = new GlUniformVector3D(this, 'u_color');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
     this.showZBuffer = new GlUniformBoolean(this, 'u_show_z_buffer');
@@ -42,7 +46,10 @@ type SpaceshipState = {
 
 class Spaceship {
   readonly state: Readonly<SpaceshipState>;
+
+  /** Model matrix to convert from object space to world space. */
   readonly transform: Readonly<Matrix3D>;
+
   private readonly colliderScale = 0.5;
 
   constructor(state: SpaceshipState) {
@@ -74,6 +81,7 @@ class Spaceship {
     return this.state.scale * this.colliderScale;
   }
 
+  /** Return a model matrix for the collider. */
   getColliderTransform(): Matrix3D {
     return this.transform.scale(this.colliderScale);
   }
@@ -113,15 +121,17 @@ function buildUI() {
   };
 }
 
-function drawCollider(baseTransform: Matrix3D, uniform: GlUniformMatrix3D, renderer: Points3DRenderer) {
-  const transforms = [
-    baseTransform,
-    baseTransform.rotateX(Math.PI / 2),
-    baseTransform.rotateY(Math.PI / 2)
+function drawCollider(baseModelTransform: Matrix3D,
+                      modelTransformUniform: GlUniformMatrix3D,
+                      renderer: Points3DRenderer) {
+  const modelTransforms = [
+    baseModelTransform,
+    baseModelTransform.rotateX(Math.PI / 2),
+    baseModelTransform.rotateY(Math.PI / 2)
   ];
 
-  transforms.forEach(transform => {
-    uniform.set(transform);
+  modelTransforms.forEach(transform => {
+    modelTransformUniform.set(transform);
     renderer.draw(WebGLRenderingContext.LINE_LOOP);
   });
 }
@@ -159,18 +169,21 @@ type SceneState = {
 };
 
 class Scene {
-  readonly baseProjectionTransform: Matrix3D;
-  readonly cameraTransform: InvertibleTransforms3D;
-  readonly viewTransform: Matrix3D;
+  /** Matrix to convert from eye space to clip coordinates. */
   readonly projectionTransform: Matrix3D;
 
+  /** Matrix to move the camera from the origin to its position in world space. */
+  readonly cameraTransform: InvertibleTransforms3D;
+
+  /** Matrix to convert from world space to eye space. */
+  readonly viewTransform: Matrix3D;
+
   constructor(readonly state: Readonly<SceneState>) {
-    this.baseProjectionTransform = Matrix3D.perspectiveProjection(state.perspective);
+    this.projectionTransform = Matrix3D.perspectiveProjection(state.perspective);
     this.cameraTransform = new InvertibleTransforms3D()
       .rotateY(state.cameraRotation)
       .translate(0, 0, 2.25);
     this.viewTransform = this.cameraTransform.inverse();
-    this.projectionTransform = this.baseProjectionTransform.multiply(this.viewTransform);
   }
 
   update(): Scene {
@@ -256,28 +269,33 @@ class App {
     program.activate();
     program.showZBuffer.set(this.ui.showZBuffer.checked);
     program.color.set(BLACK);
+    program.projectionTransform.set(scene.projectionTransform);
+    program.viewTransform.set(scene.viewTransform);
 
     if (scene.state.ray) {
       scene.state.ray.renderer.setupForDrawing();
-      program.transform.set(scene.projectionTransform);
+      // The ray is already in world coordinates.
+      program.modelTransform.set(new Matrix3D());
       scene.state.ray.renderer.draw(gl.LINES);
     }
 
     this.groundRenderer.setupForDrawing();
-    program.transform.set(scene.projectionTransform);
+    // The ground is already in world coordinates.
+    program.modelTransform.set(new Matrix3D());
     this.groundRenderer.draw(gl.LINES);
+
     this.spaceshipRenderer.setupForDrawing();
     program.color.set(PURPLE);
     scene.state.spaceships.forEach(spaceship => {
-      program.transform.set(scene.projectionTransform.multiply(spaceship.transform));
+      program.modelTransform.set(spaceship.transform);
       this.spaceshipRenderer.draw();
     });
 
     if (this.ui.showColliders.checked) {
       this.circleRenderer.setupForDrawing();
       scene.state.spaceships.forEach(spaceship => {
-        const transform = scene.projectionTransform.multiply(spaceship.getColliderTransform());
-        drawCollider(transform, program.transform, this.circleRenderer);
+        const transform = spaceship.getColliderTransform();
+        drawCollider(transform, program.modelTransform, this.circleRenderer);
       });
     }
   }
