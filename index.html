@@ -4,13 +4,18 @@
 <title>WebGL Fun 2</title>
 <h1>WebGL Fun 2</h1>
 <p>See <a href="https://github.com/toolness/webgl-fun2">toolness/webgl-fun2</a> for the source code.</p>
-<p class="ui">
-  <label>
-    <input type="checkbox" id="show-colliders"> Show colliders
-  </label>
-  <label>
-    <input type="checkbox" id="pause"> Pause
-  </label>
-</p>
+<div class="ui-wrapper">
+  <div class="ui">
+    <label>
+      <input type="checkbox" id="show-colliders"> Show colliders
+    </label>
+    <label>
+      <input type="checkbox" id="pause"> Pause
+    </label>
+    <label>
+      <input type="checkbox" id="show-z-buffer" checked> Show z-buffer
+    </label>
+  </div>
+</div>
 <canvas width="800" height="800" id="canvas">
 <script src="./app.bundle.js"></script>
