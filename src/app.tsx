@@ -377,6 +377,7 @@ class App {
 }
 
 interface CheckboxProps {
+  label: string;
   checked: boolean;
   onToggle: (newValue: boolean) => void;
 }
@@ -384,9 +385,11 @@ interface CheckboxProps {
 class Checkbox extends Component<CheckboxProps> {
   render(props: CheckboxProps) {
     return (
-      <input type="checkbox"
-             checked={props.checked}
-             onClick={() => props.onToggle(!props.checked)} />
+      <label>
+        <input type="checkbox"
+              checked={props.checked}
+              onClick={() => props.onToggle(!props.checked)} /> {props.label}
+      </label>
     );
   }
 }
@@ -416,22 +419,18 @@ class AppUi extends Component<AppUiProps, AppUiState> {
     return (
       <div className="ui-wrapper">
         <div className="ui">
-          <label>
-            <Checkbox checked={state.showColliders}
-                      onToggle={showColliders => this.setState({ showColliders })} /> Show colliders
-          </label>
-          <label>
-            <Checkbox checked={state.isPaused}
-                      onToggle={isPaused => this.setState({ isPaused })} /> Pause
-          </label>
-          <label>
-            <Checkbox checked={state.showZBuffer}
-                      onToggle={showZBuffer => this.setState({ showZBuffer })} /> Show z-buffer
-          </label>
-          <label>
-            <Checkbox checked={state.enableLighting}
-                      onToggle={enableLighting => this.setState({ enableLighting })} /> Enable lighting
-          </label>
+          <Checkbox checked={state.showColliders}
+                    label="Show colliders"
+                    onToggle={showColliders => this.setState({ showColliders })} />
+          <Checkbox checked={state.isPaused}
+                    label="Pause"
+                    onToggle={isPaused => this.setState({ isPaused })} />
+          <Checkbox checked={state.showZBuffer}
+                    label="Show z-buffer"
+                    onToggle={showZBuffer => this.setState({ showZBuffer })} />
+          <Checkbox checked={state.enableLighting}
+                    label="Enable lighting"
+                    onToggle={enableLighting => this.setState({ enableLighting })} />
         </div>
       </div>
     );
