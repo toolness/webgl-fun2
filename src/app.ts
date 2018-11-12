@@ -308,8 +308,12 @@ class App {
     const updateFrame = () => {
       this.render(scene);
 
-      const actions: AppAction[] = [...this.queuedActions, { type: 'tick' }];
+      const actions: AppAction[] = [...this.queuedActions];
       this.queuedActions = [];
+
+      if (!this.ui.pause.checked) {
+        actions.push({ type: 'tick' });
+      }
 
       for (let action of actions) {
         scene = this.processAction(scene, action);
