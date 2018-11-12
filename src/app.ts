@@ -5,7 +5,6 @@ import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
 import { makeSpaceship, makeGround, makeRayPoints, makeCircle } from "./shapes";
 import { Point2D, screenCoordsToWorld, Dimensions2D } from "./screen-space";
-import { CheckableValue } from "./checkable-value";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
@@ -197,6 +196,17 @@ function createRandomSpaceships(amount = 30) {
   return spaceships;
 }
 
+type ClickAction = {
+  type: 'click';
+  point: Point2D;
+};
+
+type TickAction = {
+  type: 'tick'
+};
+
+type AppAction = ClickAction|TickAction;
+
 class App {
   readonly ui = buildUI();
   readonly gl: WebGLRenderingContext;
@@ -204,7 +214,7 @@ class App {
   readonly spaceshipRenderer: Points3DRenderer;
   readonly groundRenderer: Points3DRenderer;
   readonly circleRenderer: Points3DRenderer;
-  readonly screenClick: CheckableValue<Point2D> = new CheckableValue();
+  private queuedActions: AppAction[] = [];
 
   constructor(readonly canvas: HTMLCanvasElement) {
     const gl = canvas.getContext('webgl');
@@ -221,7 +231,10 @@ class App {
 
     canvas.addEventListener('click', (e) => {
       if (this.ui.pause.checked) return;
-      this.screenClick.set({x: e.offsetX, y: e.offsetY});
+      this.queuedActions.push({
+        type: 'click',
+        point: {x: e.offsetX, y: e.offsetY}
+      });
     });
   }
 
@@ -258,24 +271,20 @@ class App {
     }
   }
 
-  getNextScene(scene: Scene): Scene {
-    let nextScene = scene;
+  processAction(scene: Scene, action: AppAction): Scene {
+    switch (action.type) {
+      case 'click':
+      return scene.shootRay(new CameraRay({
+        coords: action.point,
+        program: this.program,
+        canvas: this.canvas,
+        cameraTransform: scene.cameraTransform,
+        perspective: scene.state.perspective
+      }));
 
-    if (!this.ui.pause.checked) {
-      this.screenClick.check(coords => {
-        nextScene = nextScene.shootRay(new CameraRay({
-          coords,
-          program: this.program,
-          canvas: this.canvas,
-          cameraTransform: scene.cameraTransform,
-          perspective: scene.state.perspective
-        }));
-      });
-
-      nextScene = nextScene.update();
+      case 'tick':
+      return scene.update();
     }
-
-    return nextScene;
   }
 
   createInitialScene(): Scene {
@@ -299,7 +308,12 @@ class App {
     const updateFrame = () => {
       this.render(scene);
 
-      scene = this.getNextScene(scene);
+      const actions: AppAction[] = [...this.queuedActions, { type: 'tick' }];
+      this.queuedActions = [];
+
+      for (let action of actions) {
+        scene = this.processAction(scene, action);
+      }
 
       window.requestAnimationFrame(updateFrame);
     }
