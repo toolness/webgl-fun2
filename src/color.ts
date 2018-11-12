@@ -28,4 +28,3 @@ export class Color extends Vector3D {
 }
 
 export const BLACK = new Color(0, 0, 0);
-export const PURPLE = Color.fromHex('#ed225d');

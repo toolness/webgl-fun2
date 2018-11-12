@@ -10,10 +10,13 @@ import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
 import { KeyboardMap } from "./keyboard-map";
 import { Points3D } from "./points-3d";
-import { BLACK, PURPLE } from "./color";
+import { BLACK, Color } from "./color";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
+
+export const PURPLE = Color.fromHex('#ed225d');
+export const BLUE = Color.fromHex('#2d7bb6');
 
 class SimpleGlProgram extends GlProgram {
   readonly projectionTransform: GlUniformMatrix3D;
@@ -42,6 +45,7 @@ type SpaceshipState = {
   shipTheta: number;
   shipThetaVelocity: number;
   z: number;
+  color: Color;
 };
 
 class Spaceship {
@@ -73,6 +77,7 @@ class Spaceship {
       shipTheta: Math.random(),
       shipThetaVelocity: Math.random() * 0.05,
       z: Math.random(),
+      color: PURPLE,
       ...props
     });
   }
@@ -92,6 +97,10 @@ class Spaceship {
 
   doesRayIntersect(ray: Ray3D): boolean {
     return getRaySphereIntersection(ray, this.center(), this.colliderRadius) !== null;
+  }
+
+  withColor(color: Color): Spaceship {
+    return new Spaceship({...this.state, color});
   }
 
   update(): Spaceship {
@@ -199,7 +208,9 @@ class Scene {
     const { state } = this;
     return new Scene({
       ...state,
-      spaceships: state.spaceships.filter(s => !s.doesRayIntersect(ray.ray)),
+      spaceships: state.spaceships.map(
+        s => s.withColor(s.doesRayIntersect(ray.ray) ? BLUE : PURPLE)
+      ),
       ray
     });
   }
@@ -285,8 +296,8 @@ class App {
     this.groundRenderer.draw(gl.LINES);
 
     this.spaceshipRenderer.setupForDrawing();
-    program.color.set(PURPLE);
     scene.state.spaceships.forEach(spaceship => {
+      program.color.set(spaceship.state.color);
       program.modelTransform.set(spaceship.transform);
       this.spaceshipRenderer.draw();
     });
@@ -295,6 +306,7 @@ class App {
       this.circleRenderer.setupForDrawing();
       scene.state.spaceships.forEach(spaceship => {
         const transform = spaceship.getColliderTransform();
+        program.color.set(spaceship.state.color);
         drawCollider(transform, program.modelTransform, this.circleRenderer);
       });
     }
