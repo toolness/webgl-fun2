@@ -8,9 +8,9 @@ import { Point2D, screenCoordsToWorld, Dimensions2D } from "./screen-space";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
-import { KeyboardMap } from "./keyboard-map";
 import { Points3D } from "./points-3d";
 import { BLACK, Color } from "./color";
+import { h, render, Component } from 'preact';
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -123,26 +123,6 @@ class Spaceship {
   }
 };
 
-function buildUI() {
-  const showColliders = getElement('input', '#show-colliders');
-  const pause = getElement('input', '#pause');
-  const showZBuffer = getElement('input', '#show-z-buffer');
-  const enableLighting = getElement('input', '#enable-lighting');
-  const keyMap = new KeyboardMap();
-
-  keyMap.setCheckboxToggler('c', showColliders);
-  keyMap.setCheckboxToggler('p', pause);
-  keyMap.setCheckboxToggler('z', showZBuffer);
-  keyMap.setCheckboxToggler('l', enableLighting);
-
-  return {
-    showColliders,
-    pause,
-    showZBuffer,
-    enableLighting
-  };
-}
-
 function drawCollider(baseModelTransform: Matrix3D,
                       modelTransformUniform: GlUniformMatrix3D,
                       renderer: Points3DRenderer) {
@@ -253,15 +233,16 @@ type TickAction = {
 type AppAction = ClickAction|TickAction;
 
 class App {
-  readonly ui = buildUI();
   readonly gl: WebGLRenderingContext;
   readonly program: SimpleGlProgram;
   readonly spaceshipRenderer: Points3DRenderer;
   readonly groundRenderer: Points3DRenderer;
   readonly circleRenderer: Points3DRenderer;
   private queuedActions: AppAction[] = [];
+  private ui: AppUiState;
 
-  constructor(readonly canvas: HTMLCanvasElement) {
+  constructor(readonly canvas: HTMLCanvasElement,
+              ui: AppUiState) {
     const gl = canvas.getContext('webgl');
 
     if (!gl) throw new Error("webgl is not supported on this browser!");
@@ -273,14 +254,23 @@ class App {
     this.spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
     this.groundRenderer = new Points3DRenderer(program, makeGround());
     this.circleRenderer = new Points3DRenderer(program, makeCircle());
+    this.ui = ui;
 
     canvas.addEventListener('click', (e) => {
-      if (this.ui.pause.checked) return;
+      if (this.ui.isPaused) return;
       this.queuedActions.push({
         type: 'click',
         point: {x: e.offsetX, y: e.offsetY}
       });
     });
+  }
+
+  updateUi(ui: AppUiState) {
+    this.ui = ui;
+  }
+
+  getUi() {
+    return this.ui;
   }
 
   render(scene: Scene) {
@@ -291,7 +281,7 @@ class App {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
-    program.showZBuffer.set(this.ui.showZBuffer.checked);
+    program.showZBuffer.set(this.ui.showZBuffer);
     program.color.set(BLACK);
     // Have the light be where the camera is.
     program.light.set(scene.cameraTransform.matrix.transformVector(new Vector3D()));
@@ -312,7 +302,7 @@ class App {
     this.groundRenderer.draw(gl.LINES);
 
     this.spaceshipRenderer.setupForDrawing();
-    program.shade.set(this.ui.enableLighting.checked);
+    program.shade.set(this.ui.enableLighting);
     program.normal.set(Spaceship.normal);
     scene.state.spaceships.forEach(spaceship => {
       program.color.set(spaceship.state.color);
@@ -321,7 +311,7 @@ class App {
     });
     program.shade.set(false);
 
-    if (this.ui.showColliders.checked) {
+    if (this.ui.showColliders) {
       this.circleRenderer.setupForDrawing();
       scene.state.spaceships.forEach(spaceship => {
         const transform = spaceship.getColliderTransform();
@@ -371,7 +361,7 @@ class App {
       const actions: AppAction[] = [...this.queuedActions];
       this.queuedActions = [];
 
-      if (!this.ui.pause.checked) {
+      if (!this.ui.isPaused) {
         actions.push({ type: 'tick' });
       }
 
@@ -386,8 +376,77 @@ class App {
   }
 }
 
+interface CheckboxProps {
+  checked: boolean;
+  onToggle: (newValue: boolean) => void;
+}
+
+class Checkbox extends Component<CheckboxProps> {
+  render(props: CheckboxProps) {
+    return (
+      <input type="checkbox"
+             checked={props.checked}
+             onClick={() => props.onToggle(!props.checked)} />
+    );
+  }
+}
+
+interface AppUiState {
+  showColliders: boolean;
+  isPaused: boolean;
+  showZBuffer: boolean;
+  enableLighting: boolean;
+}
+
+interface AppUiProps {
+  app: App
+}
+
+class AppUi extends Component<AppUiProps, AppUiState> {
+  constructor(props: AppUiProps) {
+    super(props);
+    this.state = props.app.getUi();
+  }
+
+  componentDidUpdate() {
+    this.props.app.updateUi(this.state);
+  }
+
+  render(props: AppUiProps, state: AppUiState): JSX.Element {
+    return (
+      <div className="ui-wrapper">
+        <div className="ui">
+          <label>
+            <Checkbox checked={state.showColliders}
+                      onToggle={showColliders => this.setState({ showColliders })} /> Show colliders
+          </label>
+          <label>
+            <Checkbox checked={state.isPaused}
+                      onToggle={isPaused => this.setState({ isPaused })} /> Pause
+          </label>
+          <label>
+            <Checkbox checked={state.showZBuffer}
+                      onToggle={showZBuffer => this.setState({ showZBuffer })} /> Show z-buffer
+          </label>
+          <label>
+            <Checkbox checked={state.enableLighting}
+                      onToggle={enableLighting => this.setState({ enableLighting })} /> Enable lighting
+          </label>
+        </div>
+      </div>
+    );
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
-  const app = new App(getElement('canvas', '#canvas'));
+  const app = new App(getElement('canvas', '#canvas'), {
+    showColliders: false,
+    isPaused: false,
+    showZBuffer: true,
+    enableLighting: true
+  });
 
   app.run();
+
+  render(<AppUi app={app} />, getElement('div', '#app-ui'));
 });
