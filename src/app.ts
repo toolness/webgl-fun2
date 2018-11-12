@@ -1,4 +1,4 @@
-import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean } from "./webgl";
+import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean, GlUniformVector3D } from "./webgl";
 import { Points3DRenderer, Points3DRendererProgram } from "./points-3d-renderer";
 import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
@@ -10,6 +10,7 @@ import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
 import { KeyboardMap } from "./keyboard-map";
 import { Points3D } from "./points-3d";
+import { BLACK, PURPLE } from "./colors";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -17,11 +18,13 @@ const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as str
 class SimpleGlProgram extends GlProgram {
   readonly transform: GlUniformMatrix3D;
   readonly showZBuffer: GlUniformBoolean;
+  readonly color: GlUniformVector3D;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, zBufferFragmentShaderSrc);
     this.transform = new GlUniformMatrix3D(this, 'u_transform');
+    this.color = new GlUniformVector3D(this, 'u_color');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
     this.showZBuffer = new GlUniformBoolean(this, 'u_show_z_buffer');
   }
@@ -252,6 +255,7 @@ class App {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
     program.showZBuffer.set(this.ui.showZBuffer.checked);
+    program.color.set(BLACK);
 
     if (scene.state.ray) {
       scene.state.ray.renderer.setupForDrawing();
@@ -263,6 +267,7 @@ class App {
     program.transform.set(scene.projectionTransform);
     this.groundRenderer.draw(gl.LINES);
     this.spaceshipRenderer.setupForDrawing();
+    program.color.set(PURPLE);
     scene.state.spaceships.forEach(spaceship => {
       program.transform.set(scene.projectionTransform.multiply(spaceship.transform));
       this.spaceshipRenderer.draw();

@@ -1,4 +1,5 @@
 import { Matrix3D } from "./matrix-3d";
+import { Vector3D } from "./vector-3d";
 
 function createShader(gl: WebGLRenderingContext, type: number, source: string): WebGLShader {
   const shader = gl.createShader(type);
@@ -76,9 +77,9 @@ class GlUniformBase {
   }
 }
 
-export class GlUniformVector extends GlUniformBase {
-  set(value: Float32List) {
-    this.program.gl.uniform4fv(this.location, value);
+export class GlUniformVector3D extends GlUniformBase {
+  set(value: Vector3D) {
+    this.program.gl.uniform4fv(this.location, [value.x, value.y, value.z, value.w]);
   }
 }
 
