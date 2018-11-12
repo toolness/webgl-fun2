@@ -10,7 +10,7 @@ import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
 import { KeyboardMap } from "./keyboard-map";
 import { Points3D } from "./points-3d";
-import { BLACK, PURPLE } from "./colors";
+import { BLACK, PURPLE } from "./color";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
