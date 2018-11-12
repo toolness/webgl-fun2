@@ -93,3 +93,9 @@ export class GlUniformMatrix3D extends GlUniformBase {
     this.program.gl.uniformMatrix4fv(this.location, false, value.toFloat32Array());
   }
 }
+
+export class GlUniformBoolean extends GlUniformBase {
+  set(value: boolean) {
+    this.program.gl.uniform1f(this.location, value ? 1 : 0);
+  }
+}

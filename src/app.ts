@@ -1,4 +1,4 @@
-import { GlProgram, getAttribLocation, GlUniformMatrix3D } from "./webgl";
+import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean } from "./webgl";
 import { Points3DRenderer, Points3DRendererProgram } from "./points-3d-renderer";
 import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
@@ -12,16 +12,18 @@ import { KeyboardMap } from "./keyboard-map";
 import { Points3D } from "./points-3d";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
-const zBufferFragmentShaderSrc = require("./z-buffer-fragment-shader.glsl") as string;
+const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
 class SimpleGlProgram extends GlProgram {
   readonly transform: GlUniformMatrix3D;
+  readonly showZBuffer: GlUniformBoolean;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, simpleVertexShaderSrc, zBufferFragmentShaderSrc);
     this.transform = new GlUniformMatrix3D(this, 'u_transform');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
+    this.showZBuffer = new GlUniformBoolean(this, 'u_show_z_buffer');
   }
 }
 
@@ -94,14 +96,17 @@ class Spaceship {
 function buildUI() {
   const showColliders = getElement('input', '#show-colliders');
   const pause = getElement('input', '#pause');
+  const showZBuffer = getElement('input', '#show-z-buffer');
   const keyMap = new KeyboardMap();
 
   keyMap.setCheckboxToggler('c', showColliders);
   keyMap.setCheckboxToggler('p', pause);
+  keyMap.setCheckboxToggler('z', showZBuffer);
 
   return {
     showColliders,
-    pause
+    pause,
+    showZBuffer
   };
 }
 
@@ -246,6 +251,7 @@ class App {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
+    program.showZBuffer.set(this.ui.showZBuffer.checked);
 
     if (scene.state.ray) {
       scene.state.ray.renderer.setupForDrawing();
@@ -295,7 +301,7 @@ class App {
         right: 1,
         left: -1,
         near: 1,
-        far: 3  
+        far: 4
       },
       spaceships: createRandomSpaceships(),
       cameraRotation: 0
