@@ -18,6 +18,14 @@ kbd {
   text-shadow:0 1px 0 #fff;
 }
 
+.ui-wrapper {
+  margin: 1em 0;
+}
+
+.ui {
+  display: inline-block;
+}
+
 .ui label {
   display: block;
 }
