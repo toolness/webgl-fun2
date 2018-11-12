@@ -99,3 +99,16 @@ export class GlUniformBoolean extends GlUniformBase {
     this.program.gl.uniform1f(this.location, value ? 1 : 0);
   }
 }
+
+export function setupBuffer(gl: WebGLRenderingContext, value: Float32Array): WebGLBuffer {
+  const buffer = gl.createBuffer();
+
+  if (buffer === null) {
+    throw new Error("gl.createBuffer() failed!");
+  }
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, value, gl.STATIC_DRAW);
+
+  return buffer;
+}

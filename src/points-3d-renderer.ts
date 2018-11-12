@@ -1,4 +1,4 @@
-import { GlProgram } from "./webgl";
+import { GlProgram, setupBuffer } from "./webgl";
 import { Points3D } from "./points-3d";
 
 export interface Points3DRendererProgram extends GlProgram {
@@ -10,16 +10,7 @@ export class Points3DRenderer {
 
   constructor(readonly program: Points3DRendererProgram, readonly points: Points3D) {
     const { gl } = program;
-    const buffer = gl.createBuffer();
-
-    if (buffer === null) {
-      throw new Error("gl.createBuffer() failed!");
-    }
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.bufferData(gl.ARRAY_BUFFER, points.toFloat32Array(), gl.STATIC_DRAW);
-
-    this.buffer = buffer;
+    this.buffer = setupBuffer(gl, points.toFloat32Array());
   }
 
   setupForDrawing() {
