@@ -15,8 +15,9 @@ import { BLACK, Color } from "./color";
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-export const PURPLE = Color.fromHex('#ed225d');
-export const BLUE = Color.fromHex('#2d7bb6');
+const DRAW_RAY = false;
+const PURPLE = Color.fromHex('#ed225d');
+const BLUE = Color.fromHex('#2d7bb6');
 
 class SimpleGlProgram extends GlProgram {
   readonly projectionTransform: GlUniformMatrix3D;
@@ -24,6 +25,9 @@ class SimpleGlProgram extends GlProgram {
   readonly modelTransform: GlUniformMatrix3D;
   readonly showZBuffer: GlUniformBoolean;
   readonly color: GlUniformVector3D;
+  readonly light: GlUniformVector3D;
+  readonly normal: GlUniformVector3D;
+  readonly shade: GlUniformBoolean;
   readonly positionAttributeLocation: number;
 
   constructor(gl: WebGLRenderingContext) {
@@ -32,6 +36,9 @@ class SimpleGlProgram extends GlProgram {
     this.viewTransform = new GlUniformMatrix3D(this, 'u_view_transform');
     this.modelTransform = new GlUniformMatrix3D(this, 'u_model_transform');
     this.color = new GlUniformVector3D(this, 'u_color');
+    this.light = new GlUniformVector3D(this, 'u_light');
+    this.normal = new GlUniformVector3D(this, 'u_normal');
+    this.shade = new GlUniformBoolean(this, 'u_shade');
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
     this.showZBuffer = new GlUniformBoolean(this, 'u_show_z_buffer');
   }
@@ -53,6 +60,9 @@ class Spaceship {
 
   /** Model matrix to convert from object space to world space. */
   readonly transform: Readonly<Matrix3D>;
+
+  /** The ship's surface normal, in object space. */
+  static readonly normal = new Vector3D(0, 0, 1);
 
   private readonly colliderScale = 0.5;
 
@@ -280,10 +290,13 @@ class App {
     program.activate();
     program.showZBuffer.set(this.ui.showZBuffer.checked);
     program.color.set(BLACK);
+    // Have the light be where the camera is.
+    program.light.set(scene.cameraTransform.matrix.transformVector(new Vector3D()));
     program.projectionTransform.set(scene.projectionTransform);
     program.viewTransform.set(scene.viewTransform);
+    program.shade.set(false);
 
-    if (scene.state.ray) {
+    if (scene.state.ray && DRAW_RAY) {
       scene.state.ray.renderer.setupForDrawing();
       // The ray is already in world coordinates.
       program.modelTransform.set(new Matrix3D());
@@ -296,11 +309,14 @@ class App {
     this.groundRenderer.draw(gl.LINES);
 
     this.spaceshipRenderer.setupForDrawing();
+    program.shade.set(true);
+    program.normal.set(Spaceship.normal);
     scene.state.spaceships.forEach(spaceship => {
       program.color.set(spaceship.state.color);
       program.modelTransform.set(spaceship.transform);
       this.spaceshipRenderer.draw();
     });
+    program.shade.set(false);
 
     if (this.ui.showColliders.checked) {
       this.circleRenderer.setupForDrawing();
