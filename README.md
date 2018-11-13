@@ -1,5 +1,6 @@
 This is a terribly inefficient attempt at building a 3D engine in WebGL
-using no dependencies.
+using no dependencies (with the exception of preact, which is used
+for a rudimentary user interface).
 
 It is being built primarily for educational purposes.
 
