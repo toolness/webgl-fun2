@@ -231,7 +231,17 @@ type TickAction = {
   type: 'tick'
 };
 
-type AppAction = ClickAction|TickAction;
+type UiUpdateAction = {
+  type: 'uiupdate',
+  ui: AppUiState
+};
+
+type AppAction = ClickAction|TickAction|UiUpdateAction;
+
+type AppState = {
+  scene: Scene;
+  ui: AppUiState;
+}
 
 class App {
   readonly gl: WebGLRenderingContext;
@@ -269,15 +279,15 @@ class App {
     });
   }
 
-  updateUi(ui: AppUiState) {
-    this.ui = ui;
+  dispatchAction(action: AppAction) {
+    this.queuedActions.push(action);
   }
 
   getUi() {
     return this.ui;
   }
 
-  render(scene: Scene) {
+  render({ scene, ui }: AppState) {
     const { gl, program } = this;
 
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -285,7 +295,7 @@ class App {
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     program.activate();
-    program.showZBuffer.set(this.ui.showZBuffer);
+    program.showZBuffer.set(ui.showZBuffer);
     program.color.set(BLACK);
     // Have the light be where the camera is.
     program.light.set(scene.cameraTransform.matrix.transformVector(new Vector3D()));
@@ -306,7 +316,7 @@ class App {
     this.groundRenderer.draw(gl.LINES);
 
     this.spaceshipRenderer.setupForDrawing();
-    program.shade.set(this.ui.enableLighting);
+    program.shade.set(ui.enableLighting);
     program.normal.set(Spaceship.normal);
     scene.state.spaceships.forEach(spaceship => {
       program.color.set(spaceship.state.color);
@@ -315,7 +325,7 @@ class App {
     });
     program.shade.set(false);
 
-    if (this.ui.showColliders) {
+    if (ui.showColliders) {
       this.circleRenderer.setupForDrawing();
       scene.state.spaceships.forEach(spaceship => {
         const transform = spaceship.getColliderTransform();
@@ -325,19 +335,22 @@ class App {
     }
   }
 
-  processAction(scene: Scene, action: AppAction): Scene {
+  processAction({ scene, ui }: AppState, action: AppAction): AppState {
     switch (action.type) {
       case 'click':
-      return scene.shootRay(new CameraRay({
+      return { scene: scene.shootRay(new CameraRay({
         coords: action.point,
         program: this.program,
         canvas: this.canvas,
         cameraTransform: scene.cameraTransform,
         perspective: scene.state.perspective
-      }));
+      })), ui };
 
       case 'tick':
-      return scene.update();
+      return { scene: scene.update(), ui };
+
+      case 'uiupdate':
+      return { scene, ui: action.ui };
     }
   }
 
@@ -357,20 +370,23 @@ class App {
   }
 
   run() {
-    let scene = this.createInitialScene();
+    let state: AppState = {
+      scene: this.createInitialScene(),
+      ui: this.ui
+    };
 
     const updateFrame = () => {
-      this.render(scene);
+      this.render(state);
 
       const actions: AppAction[] = [...this.queuedActions];
       this.queuedActions = [];
 
-      if (!this.ui.isPaused) {
+      if (!state.ui.isPaused) {
         actions.push({ type: 'tick' });
       }
 
       for (let action of actions) {
-        scene = this.processAction(scene, action);
+        state = this.processAction(state, action);
       }
 
       window.requestAnimationFrame(updateFrame);
@@ -418,7 +434,7 @@ class AppUi extends Component<AppUiProps, AppUiState> {
   }
 
   componentDidUpdate() {
-    this.props.app.updateUi(this.state);
+    this.props.app.dispatchAction({ type: 'uiupdate', ui: this.state });
   }
 
   render(props: AppUiProps, state: AppUiState): JSX.Element {
