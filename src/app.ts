@@ -7,11 +7,9 @@ import { makeSpaceship, makeGround, makeRayPoints, makeCircle } from "./shapes";
 import { Point2D, screenCoordsToWorld, Dimensions2D } from "./screen-space";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
-import { getElement } from "./get-element";
 import { Points3D } from "./points-3d";
 import { BLACK, Color } from "./color";
-import { h, render } from 'preact';
-import { AppUi, AppUiState } from "./app-ui";
+import { AppUiState } from "./app-ui";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -395,11 +393,3 @@ export class App {
     updateFrame();
   }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-  const app = new App(getElement('canvas', '#canvas'));
-
-  app.run();
-
-  render(<AppUi app={app} />, getElement('div', '#app-ui'));
-});
