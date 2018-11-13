@@ -10,8 +10,8 @@ import { getRaySphereIntersection } from "./intersections";
 import { getElement } from "./get-element";
 import { Points3D } from "./points-3d";
 import { BLACK, Color } from "./color";
-import { h, render, Component } from 'preact';
-import { Hotkey } from "./keyboard";
+import { h, render } from 'preact';
+import { AppUi, AppUiState } from "./app-ui";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -243,7 +243,7 @@ type AppState = {
   ui: AppUiState;
 }
 
-class App {
+export class App {
   readonly gl: WebGLRenderingContext;
   readonly program: SimpleGlProgram;
   readonly spaceshipRenderer: Points3DRenderer;
@@ -393,74 +393,6 @@ class App {
     }
 
     updateFrame();
-  }
-}
-
-interface CheckboxProps {
-  label: string;
-  checked: boolean;
-  onToggle: (newValue: boolean) => void;
-  hotkey?: string;
-}
-
-function Checkbox(props: CheckboxProps): JSX.Element {
-  const handleToggle = () => props.onToggle(!props.checked);
-
-  return (
-    <label>
-      <input type="checkbox"
-            checked={props.checked}
-            onClick={handleToggle} /> {props.label}{' '}
-      {props.hotkey && <Hotkey onPressed={handleToggle} hotkey={props.hotkey} />}
-    </label>
-  );
-}
-
-interface AppUiState {
-  showColliders: boolean;
-  isPaused: boolean;
-  showZBuffer: boolean;
-  enableLighting: boolean;
-}
-
-interface AppUiProps {
-  app: App
-}
-
-class AppUi extends Component<AppUiProps, AppUiState> {
-  constructor(props: AppUiProps) {
-    super(props);
-    this.state = props.app.getUi();
-  }
-
-  componentDidUpdate() {
-    this.props.app.dispatchAction({ type: 'uiupdate', ui: this.state });
-  }
-
-  render(props: AppUiProps, state: AppUiState): JSX.Element {
-    return (
-      <div className="ui-wrapper">
-        <div className="ui">
-          <Checkbox checked={state.showColliders}
-                    label="Show colliders"
-                    hotkey="c"
-                    onToggle={showColliders => this.setState({ showColliders })} />
-          <Checkbox checked={state.isPaused}
-                    label="Pause"
-                    hotkey="p"
-                    onToggle={isPaused => this.setState({ isPaused })} />
-          <Checkbox checked={state.showZBuffer}
-                    label="Show z-buffer"
-                    hotkey="z"
-                    onToggle={showZBuffer => this.setState({ showZBuffer })} />
-          {!state.showZBuffer &&
-            <Checkbox checked={state.enableLighting}
-                      label="Enable lighting"
-                      hotkey="l"
-                      onToggle={enableLighting => this.setState({ enableLighting })} />}
-        </div>
-      </div>
-    );
   }
 }
 
