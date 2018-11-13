@@ -240,10 +240,14 @@ class App {
   readonly groundRenderer: Points3DRenderer;
   readonly circleRenderer: Points3DRenderer;
   private queuedActions: AppAction[] = [];
-  private ui: AppUiState;
+  private ui: AppUiState = {
+    showColliders: false,
+    isPaused: false,
+    showZBuffer: true,
+    enableLighting: true
+  };
 
-  constructor(readonly canvas: HTMLCanvasElement,
-              ui: AppUiState) {
+  constructor(readonly canvas: HTMLCanvasElement) {
     const gl = canvas.getContext('webgl');
 
     if (!gl) throw new Error("webgl is not supported on this browser!");
@@ -255,7 +259,6 @@ class App {
     this.spaceshipRenderer = new Points3DRenderer(program, makeSpaceship());
     this.groundRenderer = new Points3DRenderer(program, makeGround());
     this.circleRenderer = new Points3DRenderer(program, makeCircle());
-    this.ui = ui;
 
     canvas.addEventListener('click', (e) => {
       if (this.ui.isPaused) return;
@@ -446,12 +449,7 @@ class AppUi extends Component<AppUiProps, AppUiState> {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  const app = new App(getElement('canvas', '#canvas'), {
-    showColliders: false,
-    isPaused: false,
-    showZBuffer: true,
-    enableLighting: true
-  });
+  const app = new App(getElement('canvas', '#canvas'));
 
   app.run();
 
