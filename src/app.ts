@@ -1,20 +1,18 @@
 import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean, GlUniformVector3D } from "./webgl";
-import { Points3DRenderer, Points3DRendererProgram } from "./points-3d-renderer";
+import { Points3DRenderer } from "./points-3d-renderer";
 import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
 import { Vector3D } from "./vector-3d";
 import { InvertibleTransforms3D } from "./invertible-transforms-3d";
-import { makeSpaceship, makeGround, makeRayPoints, makeCircle } from "./shapes";
+import { makeSpaceship, makeGround, makeCircle } from "./shapes";
 import { Point2D, screenCoordsToWorld, Dimensions2D } from "./screen-space";
 import { Ray3D } from "./ray-3d";
 import { getRaySphereIntersection } from "./intersections";
-import { Points3D } from "./points-3d";
 import { BLACK, Color } from "./color";
 import { AppUiState } from "./app-ui";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
 
-const DRAW_RAY = false;
 const PURPLE = Color.fromHex('#ed225d');
 const BLUE = Color.fromHex('#2d7bb6');
 
@@ -139,11 +137,8 @@ function drawCollider(baseModelTransform: Matrix3D,
 
 class CameraRay {
   readonly ray: Ray3D;
-  readonly points: Points3D;
-  readonly renderer: Points3DRenderer;
 
   constructor(options: {
-    program: Points3DRendererProgram,
     cameraTransform: InvertibleTransforms3D,
     canvas: Dimensions2D,
     coords: Point2D,
@@ -157,8 +152,6 @@ class CameraRay {
       options.cameraTransform.matrix
     );
     this.ray = Ray3D.fromTo(cameraPosition, screenPointInWorld);
-    this.points = makeRayPoints(this.ray);
-    this.renderer = new Points3DRenderer(options.program, this.points);
   }
 }
 
@@ -166,7 +159,6 @@ type SceneState = {
   perspective: PerspectiveOptions;
   spaceships: Spaceship[];
   cameraRotation: number;
-  ray?: CameraRay;
 };
 
 class Scene {
@@ -202,8 +194,7 @@ class Scene {
       ...state,
       spaceships: state.spaceships.map(
         s => s.withColor(s.doesRayIntersect(ray.ray) ? BLUE : PURPLE)
-      ),
-      ray
+      )
     });
   }
 };
@@ -304,13 +295,6 @@ export class App {
     program.viewTransform.set(scene.viewTransform);
     program.shade.set(false);
 
-    if (scene.state.ray && DRAW_RAY) {
-      scene.state.ray.renderer.setupForDrawing();
-      // The ray is already in world coordinates.
-      program.modelTransform.set(new Matrix3D());
-      scene.state.ray.renderer.draw(gl.LINES);
-    }
-
     this.groundRenderer.setupForDrawing();
     // The ground is already in world coordinates.
     program.modelTransform.set(new Matrix3D());
@@ -341,7 +325,6 @@ export class App {
       case 'click':
       return { scene: scene.shootRay(new CameraRay({
         coords: action.point,
-        program: this.program,
         canvas: this.canvas,
         cameraTransform: scene.cameraTransform,
         perspective: scene.state.perspective
