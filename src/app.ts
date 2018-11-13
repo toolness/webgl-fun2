@@ -251,7 +251,7 @@ export class App {
   private ui: AppUiState = {
     showColliders: false,
     isPaused: false,
-    showZBuffer: true,
+    showZBuffer: false,
     enableLighting: true
   };
 
@@ -270,9 +270,12 @@ export class App {
 
     canvas.addEventListener('click', (e) => {
       if (this.ui.isPaused) return;
+      const { height, width } = canvas.getBoundingClientRect();
+      const x = Math.floor(e.offsetX / width * canvas.width);
+      const y = Math.floor(e.offsetY / height * canvas.height);
       this.queuedActions.push({
         type: 'click',
-        point: {x: e.offsetX, y: e.offsetY}
+        point: {x, y}
       });
     });
   }

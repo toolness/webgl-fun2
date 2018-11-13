@@ -46,6 +46,6 @@ export class Hotkey extends Component<HotkeyProps> {
   }
 
   render(props: HotkeyProps) {
-    return <kbd>{props.hotkey}</kbd>;
+    return <kbd>{props.hotkey.toUpperCase()}</kbd>;
   }
 }
