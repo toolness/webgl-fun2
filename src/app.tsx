@@ -11,6 +11,7 @@ import { getElement } from "./get-element";
 import { Points3D } from "./points-3d";
 import { BLACK, Color } from "./color";
 import { h, render, Component } from 'preact';
+import { Hotkey } from "./keyboard";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;
 const zBufferFragmentShaderSrc = require("./simple-fragment-shader.glsl") as string;
@@ -380,18 +381,20 @@ interface CheckboxProps {
   label: string;
   checked: boolean;
   onToggle: (newValue: boolean) => void;
+  hotkey?: string;
 }
 
-class Checkbox extends Component<CheckboxProps> {
-  render(props: CheckboxProps) {
-    return (
-      <label>
-        <input type="checkbox"
-              checked={props.checked}
-              onClick={() => props.onToggle(!props.checked)} /> {props.label}
-      </label>
-    );
-  }
+function Checkbox(props: CheckboxProps): JSX.Element {
+  const handleToggle = () => props.onToggle(!props.checked);
+
+  return (
+    <label>
+      <input type="checkbox"
+            checked={props.checked}
+            onClick={handleToggle} /> {props.label}{' '}
+      {props.hotkey && <Hotkey onPressed={handleToggle} hotkey={props.hotkey} />}
+    </label>
+  );
 }
 
 interface AppUiState {
@@ -421,16 +424,21 @@ class AppUi extends Component<AppUiProps, AppUiState> {
         <div className="ui">
           <Checkbox checked={state.showColliders}
                     label="Show colliders"
+                    hotkey="c"
                     onToggle={showColliders => this.setState({ showColliders })} />
           <Checkbox checked={state.isPaused}
                     label="Pause"
+                    hotkey="p"
                     onToggle={isPaused => this.setState({ isPaused })} />
           <Checkbox checked={state.showZBuffer}
                     label="Show z-buffer"
+                    hotkey="z"
                     onToggle={showZBuffer => this.setState({ showZBuffer })} />
-          <Checkbox checked={state.enableLighting}
-                    label="Enable lighting"
-                    onToggle={enableLighting => this.setState({ enableLighting })} />
+          {!state.showZBuffer &&
+            <Checkbox checked={state.enableLighting}
+                      label="Enable lighting"
+                      hotkey="l"
+                      onToggle={enableLighting => this.setState({ enableLighting })} />}
         </div>
       </div>
     );
