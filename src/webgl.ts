@@ -101,6 +101,12 @@ export class GlUniformBoolean extends GlUniformBase {
   }
 }
 
+export class GlUniformInteger extends GlUniformBase {
+  set(value: number) {
+    this.program.gl.uniform1i(this.location, value);
+  }
+}
+
 export function setupBuffer(gl: WebGLRenderingContext, value: Float32Array): WebGLBuffer {
   const buffer = gl.createBuffer();
 
