@@ -1,7 +1,6 @@
-import { Points3D } from "./points-3d";
-import { Vector3D } from "./vector-3d";
-import { Ray3D } from "./ray-3d";
-import { Matrix3D } from "./matrix-3d";
+import { Points3D } from "../points-3d";
+import { Vector3D } from "../vector-3d";
+import { Matrix3D } from "../matrix-3d";
 
 export function makeSpaceship(): Points3D {
   const translate = new Matrix3D().translate(0, -0.25, 0);

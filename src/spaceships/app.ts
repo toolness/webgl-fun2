@@ -1,13 +1,13 @@
-import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean, GlUniformVector3D } from "./webgl";
-import { Points3DRenderer } from "./points-3d-renderer";
-import { Matrix3D, PerspectiveOptions } from "./matrix-3d";
-import { Vector3D } from "./vector-3d";
-import { InvertibleTransforms3D } from "./invertible-transforms-3d";
+import { GlProgram, getAttribLocation, GlUniformMatrix3D, GlUniformBoolean, GlUniformVector3D } from "../webgl";
+import { Points3DRenderer } from "../points-3d-renderer";
+import { Matrix3D, PerspectiveOptions } from "../matrix-3d";
+import { Vector3D } from "../vector-3d";
+import { InvertibleTransforms3D } from "../invertible-transforms-3d";
 import { makeSpaceship, makeGround, makeCircle } from "./shapes";
-import { Point2D, screenCoordsToWorld, Dimensions2D } from "./screen-space";
-import { Ray3D } from "./ray-3d";
-import { getRaySphereIntersection } from "./intersections";
-import { BLACK, Color } from "./color";
+import { Point2D, screenCoordsToWorld, Dimensions2D } from "../screen-space";
+import { Ray3D } from "../ray-3d";
+import { getRaySphereIntersection } from "../intersections";
+import { BLACK, Color } from "../color";
 import { AppUiState } from "./app-ui";
 
 const simpleVertexShaderSrc = require("./simple-vertex-shader.glsl") as string;

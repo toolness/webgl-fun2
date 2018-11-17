@@ -4,9 +4,9 @@ const isDevServer = /webpack-dev-server/.test(process.argv[1]);
 module.exports = {
   mode: isDevServer ? "development" : "production",
   devtool: isDevServer ? "inline-source-map" : "source-map",
-  entry: "./src/main.tsx",
+  entry: "./src/spaceships/main.tsx",
   output: {
-    filename: "main.bundle.js",
+    filename: "spaceships.bundle.js",
     path: path.join(__dirname, 'static')
   },
   resolve: {

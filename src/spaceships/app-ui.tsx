@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { App } from './app';
-import { Hotkey } from './keyboard';
+import { Hotkey } from '../keyboard';
 
 interface CheckboxProps {
   label: string;
