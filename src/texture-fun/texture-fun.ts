@@ -6,7 +6,7 @@ import { Points3DRenderer } from "../points-3d-renderer";
 const vertexShaderSrc = require("./texture-fun-vertex-shader.glsl") as string;
 const fragmentShaderSrc = require("./texture-fun-fragment-shader.glsl") as string;
 
-const TEXTURE_SIZE = 256;
+const TEXTURE_SIZE = 64;
 
 class TextureFunGlProgram extends GlProgram {
   readonly positionAttributeLocation: number;
@@ -83,6 +83,7 @@ window.onload = () => {
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TEXTURE_SIZE, TEXTURE_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureData);
   gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, texture);
