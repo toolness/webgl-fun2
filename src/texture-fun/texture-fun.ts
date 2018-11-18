@@ -1,4 +1,4 @@
-import { GlProgram, getAttribLocation, GlUniformInteger } from "../webgl";
+import { GlProgram, getAttribLocation, GlUniformInteger, GlUniformFloat } from "../webgl";
 import { getElement } from "../get-element";
 import { Points3D } from "../points-3d";
 import { Points3DRenderer } from "../points-3d-renderer";
@@ -11,11 +11,13 @@ const TEXTURE_SIZE = 256;
 class TextureFunGlProgram extends GlProgram {
   readonly positionAttributeLocation: number;
   readonly sampler: GlUniformInteger;
+  readonly size: GlUniformFloat;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, vertexShaderSrc, fragmentShaderSrc);
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
     this.sampler = new GlUniformInteger(this, 'u_sampler');
+    this.size = new GlUniformFloat(this, 'u_size');
   }
 }
 
@@ -73,6 +75,7 @@ window.onload = () => {
   gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
   gl.clear(gl.COLOR_BUFFER_BIT);
   program.activate();
+  program.size.set(canvas.width);
   renderer.setupForDrawing();
 
   const texture = gl.createTexture();
