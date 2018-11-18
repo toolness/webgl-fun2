@@ -21,6 +21,18 @@ class TextureFunGlProgram extends GlProgram {
     this.size = new GlUniformFloat(this, 'u_size');
     this.phase = new GlUniformFloat(this, 'u_phase');
   }
+
+  setupTextureForDrawing(texture: WebGLTexture, unit: number = 0) {
+    const { gl } = this;
+
+    // This assumes that the constant for gl.TEXTUREn is always the
+    // same as gl.TEXTURE0 + n, which *seems* to be the case. If it's
+    // not, I guess we could do dynamic property lookup.
+    gl.activeTexture(gl.TEXTURE0 + unit);
+
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    this.sampler.set(unit);
+  }
 }
 
 function makeTexture(size: number) {
@@ -82,10 +94,7 @@ window.onload = () => {
     program.activate();
     program.size.set(canvas.width);
     renderer.setupForDrawing();
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    program.sampler.set(0);
+    program.setupTextureForDrawing(texture, 0);
     program.phase.set(phase);
 
     renderer.draw();
