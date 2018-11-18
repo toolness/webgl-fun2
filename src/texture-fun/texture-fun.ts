@@ -12,12 +12,14 @@ class TextureFunGlProgram extends GlProgram {
   readonly positionAttributeLocation: number;
   readonly sampler: GlUniformInteger;
   readonly size: GlUniformFloat;
+  readonly phase: GlUniformFloat;
 
   constructor(gl: WebGLRenderingContext) {
     super(gl, vertexShaderSrc, fragmentShaderSrc);
     this.positionAttributeLocation = getAttribLocation(gl, this.program, 'a_position');
     this.sampler = new GlUniformInteger(this, 'u_sampler');
     this.size = new GlUniformFloat(this, 'u_size');
+    this.phase = new GlUniformFloat(this, 'u_phase');
   }
 }
 
@@ -29,10 +31,9 @@ function makeTexture(size: number) {
   for (let y = 0; y < size; y++) {
     const yGrad = Math.floor((y % GRADIENT_LENGTH) / GRADIENT_LENGTH * 255);
     for (let x = 0; x < size; x++) {
-      const xGrad = Math.floor((x % GRADIENT_LENGTH) / GRADIENT_LENGTH * 255);
       const red = yGrad;
       const green = 0;
-      const blue = xGrad;
+      const blue = 90;
       const alpha = 255;
 
       buffer[i] = red;
@@ -72,22 +73,31 @@ window.onload = () => {
   ]);
 
   const renderer = new Points3DRenderer(program, square);
-
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-  program.activate();
-  program.size.set(canvas.width);
-  renderer.setupForDrawing();
-
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TEXTURE_SIZE, TEXTURE_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureData);
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-  gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  program.sampler.set(0);
+  let phase = 0.0;
 
-  renderer.draw();
+  const render = () => {
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    program.activate();
+    program.size.set(canvas.width);
+    renderer.setupForDrawing();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    program.sampler.set(0);
+    program.phase.set(phase);
+
+    renderer.draw();
+
+    phase += 0.025;
+    window.requestAnimationFrame(render);
+  };
+
+  render();
 }
