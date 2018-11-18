@@ -55,6 +55,26 @@ export function getAttribLocation(gl: WebGLRenderingContext, program: WebGLProgr
   return loc;
 }
 
+export class GlVertexArrayObject {
+  readonly vaoExt: OES_vertex_array_object;
+  readonly vao: WebGLVertexArrayObjectOES;
+
+  constructor(gl: WebGLRenderingContext) {
+    const vaoExt = gl.getExtension('OES_vertex_array_object');
+
+    if (!vaoExt) {
+      throw new Error('OES_vertex_array_object extension is unavailable!');
+    }
+
+    this.vaoExt = vaoExt;
+    this.vao = this.vaoExt.createVertexArrayOES();
+  }
+
+  bind() {
+    this.vaoExt.bindVertexArrayOES(this.vao);
+  }
+}
+
 export class GlProgram {
   readonly program: WebGLProgram;
 
