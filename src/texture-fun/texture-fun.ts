@@ -23,15 +23,16 @@ class TextureFunGlProgram extends GlProgram {
 
 function makeTexture(size: number) {
   const buffer = new Uint8Array(size * size * 4);
-  const GRADIENT_LENGTH = 4;
+  const GRADIENT_LENGTH = 8;
   let i = 0;
 
   for (let y = 0; y < size; y++) {
     const yGrad = Math.floor((y % GRADIENT_LENGTH) / GRADIENT_LENGTH * 255);
     for (let x = 0; x < size; x++) {
+      const xGrad = Math.floor((x % GRADIENT_LENGTH) / GRADIENT_LENGTH * 255);
       const red = yGrad;
       const green = 0;
-      const blue = 255;
+      const blue = xGrad;
       const alpha = 255;
 
       buffer[i] = red;
