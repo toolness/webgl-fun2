@@ -7,13 +7,25 @@ export interface Points3DRendererProgram extends GlProgram {
 
 export class Points3DRenderer {
   buffer: WebGLBuffer;
+  vaoExt: OES_vertex_array_object;
+  vao: WebGLVertexArrayObjectOES;
 
   constructor(readonly program: Points3DRendererProgram, readonly points: Points3D) {
     const { gl } = program;
     this.buffer = setupBuffer(gl, points.toFloat32Array());
+    const vaoExt = gl.getExtension('OES_vertex_array_object');
+
+    if (!vaoExt) {
+      throw new Error('OES_vertex_array_object extension is unavailable!');
+    }
+
+    this.vaoExt = vaoExt;
+    this.vao = this.vaoExt.createVertexArrayOES();
+    this.vaoExt.bindVertexArrayOES(this.vao);
+    this.configureVertexArrayObject();
   }
 
-  setupForDrawing() {
+  configureVertexArrayObject() {
     const { gl, positionAttributeLocation } = this.program;
 
     gl.enableVertexAttribArray(positionAttributeLocation);
@@ -25,6 +37,10 @@ export class Points3DRenderer {
     const stride = 0;
     const offset = 0;
     gl.vertexAttribPointer(positionAttributeLocation, vertexSize, type, normalize, stride, offset);
+  }
+
+  setupForDrawing() {
+    this.vaoExt.bindVertexArrayOES(this.vao);
   }
 
   draw(primitiveType: number = WebGLRenderingContext.TRIANGLES) {
