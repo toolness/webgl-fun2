@@ -119,3 +119,31 @@ export function setupBuffer(gl: WebGLRenderingContext, value: Float32Array): Web
 
   return buffer;
 }
+
+function isPowerOfTwo(value: number): boolean {
+  const log2 = Math.log2(value);
+  return log2 === Math.floor(log2);
+}
+
+export function setupTexture(gl: WebGLRenderingContext, pixels: ArrayBufferView, width: number, height?: number): WebGLTexture {
+  const texture = gl.createTexture();
+
+  if (texture === null) {
+    throw new Error("gl.createTexture() failed!");
+  }
+
+  if (!height) {
+    height = width;
+  }
+
+  if (!(isPowerOfTwo(width) && isPowerOfTwo(height))) {
+    throw new Error("Texture dimensions must be powers of two!");
+  }
+
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+  return texture;
+}

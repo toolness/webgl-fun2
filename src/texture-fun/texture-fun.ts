@@ -1,4 +1,4 @@
-import { GlProgram, getAttribLocation, GlUniformInteger, GlUniformFloat } from "../webgl";
+import { GlProgram, getAttribLocation, GlUniformInteger, GlUniformFloat, setupTexture } from "../webgl";
 import { getElement } from "../get-element";
 import { Points3D } from "../points-3d";
 import { Points3DRenderer } from "../points-3d-renderer";
@@ -55,7 +55,6 @@ window.onload = () => {
 
   const program = new TextureFunGlProgram(gl);
 
-  const textureData = makeTexture(TEXTURE_SIZE);
   const square = Points3D.fromArray([
     // Top-left
     -1.0, 1.0, 0,
@@ -73,11 +72,7 @@ window.onload = () => {
   ]);
 
   const renderer = new Points3DRenderer(program, square);
-  const texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TEXTURE_SIZE, TEXTURE_SIZE, 0, gl.RGBA, gl.UNSIGNED_BYTE, textureData);
-  gl.generateMipmap(gl.TEXTURE_2D);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  const texture = setupTexture(gl, makeTexture(TEXTURE_SIZE), TEXTURE_SIZE);
 
   let phase = 0.0;
 
